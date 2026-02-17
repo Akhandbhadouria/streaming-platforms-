@@ -104,12 +104,33 @@ class TMDBService:
             return None
 
 
+
 class YouTubeService:
     """Service to interact with YouTube API"""
     BASE_URL = "https://www.googleapis.com/youtube/v3"
     
     def __init__(self):
         self.api_key = settings.YOUTUBE_API_KEY
+    
+    def is_embeddable(self, video_id):
+        """Check if a YouTube video is embeddable"""
+        url = f"{self.BASE_URL}/videos"
+        params = {
+            "part": "status",
+            "id": video_id,
+            "key": self.api_key
+        }
+
+        try:
+            response = requests.get(url, params=params)
+            data = response.json()
+
+            if data.get("items"):
+                return data["items"][0]["status"].get("embeddable", False)
+
+            return False
+        except Exception:
+            return False
     
     def search_trailer(self, movie_title, year=None):
         """Search for movie trailer on YouTube"""

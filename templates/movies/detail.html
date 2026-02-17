@@ -448,10 +448,20 @@
     <section class="trailer-section" id="trailer">
         <h2 class="section-title" style="margin-bottom: 1.5rem;">📺 Official Trailer</h2>
         <div class="video-container">
-            <iframe src="https://www.youtube.com/embed/{{ movie.youtube_trailer_key }}?enablejsapi=1&rel=0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowfullscreen>
-            </iframe>
+            <iframe
+    src="https://www.youtube.com/embed/{{ movie.youtube_trailer_key }}?rel=0&modestbranding=1"
+    frameborder="0"
+    allow="autoplay; encrypted-media; picture-in-picture"
+    allowfullscreen>
+</iframe>
+<div class="text-center mt-3">
+    <a href="https://www.youtube.com/watch?v={{ movie.youtube_trailer_key }}"
+       target="_blank"
+       class="btn btn-secondary">
+        Watch on YouTube
+    </a>
+</div>
+
         </div>
         <div class="text-center mt-3" style="margin-top: 1rem;">
             <a href="https://www.youtube.com/watch?v={{ movie.youtube_trailer_key }}" target="_blank"

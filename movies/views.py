@@ -93,22 +93,28 @@ def movie_detail(request, movie_id):
         return render(request, 'movies/error.html', {'message': 'This movie is currently restricted.'})
     
     # Get YouTube trailer
+   # Only check and save trailer if not already saved
     if not movie.youtube_trailer_key:
-        # First, try to search YouTube specifically for an embed-safe version
-        year = movie.release_date.year if movie.release_date else None
-        youtube_key = youtube_service.search_trailer(movie.title, year)
-        
-        if youtube_key:
-            movie.youtube_trailer_key = youtube_key
+
+        videos = movie_data.get('videos', {}).get('results', [])
+
+        youtube_trailers = [
+            v for v in videos
+            if v.get('site') == 'YouTube'
+            and v.get('type') == 'Trailer'
+        ]
+
+        selected_trailer = None
+
+        for v in youtube_trailers:
+            if youtube_service.is_embeddable(v['key']):
+                selected_trailer = v
+                break
+
+        if selected_trailer:
+            movie.youtube_trailer_key = selected_trailer['key']
             movie.save()
-        elif movie_data.get('videos'):
-            # Fallback to TMDB videos if search fails
-            videos = movie_data['videos'].get('results', [])
-            trailer = next((v for v in videos if v['type'] == 'Trailer' and v['site'] == 'YouTube'), None)
-            if trailer:
-                movie.youtube_trailer_key = trailer['key']
-                movie.save()
-    
+
     # Check if movie is in user's watchlist
     in_watchlist = False
     user_rating = None
