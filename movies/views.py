@@ -6,10 +6,14 @@ from django.db.models import Q, Count
 from .models import Movie, Watchlist, Rating, MovieView
 from .services import TMDBService, YouTubeService
 from .forms import RatingForm
+import logging
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils import timezone
 from datetime import timedelta
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 tmdb_service = TMDBService()
 youtube_service = YouTubeService()
@@ -25,10 +29,16 @@ def _filter_hidden_movies(request, movies_list):
 
 def home(request):
     """Home page with featured movies"""
-    # Get trending movies
-    trending_data = tmdb_service.get_trending_movies()
-    popular_data = tmdb_service.get_popular_movies()
-    top_rated_data = tmdb_service.get_top_rated_movies()
+    # Get trending movies with error handling
+    try:
+        trending_data = tmdb_service.get_trending_movies()
+        popular_data = tmdb_service.get_popular_movies()
+        top_rated_data = tmdb_service.get_top_rated_movies()
+    except Exception as e:
+        logger.error(f"Error fetching home page movies: {e}")
+        trending_data = None
+        popular_data = None
+        top_rated_data = None
     
     trending = trending_data.get('results', []) if trending_data else []
     popular = popular_data.get('results', []) if popular_data else []
@@ -77,8 +87,14 @@ def browse_movies(request):
 
 def movie_detail(request, movie_id):
     """Movie detail page"""
-    # Get movie details from TMDB
-    movie_data = tmdb_service.get_movie_details(movie_id)
+    # Get movie details from TMDB with error handling for SSL and network issues
+    try:
+        movie_data = tmdb_service.get_movie_details(movie_id)
+    except Exception as e:
+        logger.error(f"Error fetching movie details for {movie_id}: {e}")
+        return render(request, 'movies/error.html', {
+            'message': 'Unable to load movie details. The movie database is temporarily unavailable. Please try again in a few moments.'
+        })
     
     if not movie_data:
         return render(request, 'movies/error.html', {'message': 'Movie not found'})

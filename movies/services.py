@@ -2,6 +2,7 @@ import requests
 import logging
 from django.conf import settings
 from datetime import datetime
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 # Configure logger
 logger = logging.getLogger(__name__)
@@ -18,20 +19,26 @@ class TMDBService:
             'Content-Type': 'application/json;charset=utf-8'
         }
     
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        retry=retry_if_exception_type((requests.ConnectionError, requests.Timeout, requests.exceptions.SSLError, requests.exceptions.RequestException)),
+        reraise=True
+    )
     def _make_request(self, endpoint, params=None):
-        """Make a request to TMDB API"""
+        """Make a request to TMDB API with retry logic"""
         url = f"{self.BASE_URL}{endpoint}"
         if params is None:
             params = {}
         params['api_key'] = self.api_key
         
         try:
-            response = requests.get(url, params=params, headers=self.headers)
+            response = requests.get(url, params=params, headers=self.headers, timeout=10)
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
             logger.error(f"Error making request to TMDB: {e}")
-            return None
+            raise
     
     def get_popular_movies(self, page=1):
         """Get popular movies"""
@@ -116,8 +123,13 @@ class YouTubeService:
     def __init__(self):
         self.api_key = settings.YOUTUBE_API_KEY
     
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        retry=retry_if_exception_type((requests.ConnectionError, requests.Timeout, requests.exceptions.SSLError, requests.exceptions.RequestException))
+    )
     def is_embeddable(self, video_id):
-        """Check if a YouTube video is embeddable"""
+        """Check if a YouTube video is embeddable with retry logic"""
         url = f"{self.BASE_URL}/videos"
         params = {
             "part": "status",
@@ -126,18 +138,25 @@ class YouTubeService:
         }
 
         try:
-            response = requests.get(url, params=params)
+            response = requests.get(url, params=params, timeout=10)
+            response.raise_for_status()
             data = response.json()
 
             if data.get("items"):
                 return data["items"][0]["status"].get("embeddable", False)
 
             return False
-        except Exception:
+        except Exception as e:
+            logger.error(f"Error checking YouTube embeddability: {e}")
             return False
     
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        retry=retry_if_exception_type((requests.ConnectionError, requests.Timeout, requests.exceptions.SSLError, requests.exceptions.RequestException))
+    )
     def search_trailer(self, movie_title, year=None):
-        """Search for movie trailer on YouTube"""
+        """Search for movie trailer on YouTube with retry logic"""
         query = f"{movie_title} official trailer"
         if year:
             query += f" {year}"
@@ -152,7 +171,7 @@ class YouTubeService:
         }
         
         try:
-            response = requests.get(f"{self.BASE_URL}/search", params=params)
+            response = requests.get(f"{self.BASE_URL}/search", params=params, timeout=10)
             response.raise_for_status()
             data = response.json()
             

@@ -19,7 +19,7 @@
         font-weight: 700;
         color: white;
         margin: 0;
-        background: linear-gradient(90deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+        background: linear-gradient(90deg, #fff 0%, rgba(255, 255, 255, 0.7) 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -208,16 +208,16 @@
             align-items: flex-start;
             gap: 1rem;
         }
-        
+
         .you-might-like-header h2 {
             font-size: 1.5rem;
         }
-        
+
         .movie-grid {
             grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
             gap: 1.5rem;
         }
-        
+
         .movie-card {
             border-radius: 30px;
         }
@@ -226,7 +226,8 @@
 {% endblock %}
 
 {% block content %}
-<div style="display: grid; grid-template-columns: 320px 1fr; gap: 2.5rem; padding: 120px 40px 40px 40px; max-width: 1700px; margin: 0 auto;">
+<div
+    style="display: grid; grid-template-columns: 320px 1fr; gap: 2.5rem; padding: 120px 40px 40px 40px; max-width: 1700px; margin: 0 auto;">
 
     <!-- Sidebar -->
     <div style="display: flex; flex-direction: column; gap: 2rem;">
@@ -234,16 +235,24 @@
         <div class="side-panel">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                 <h3 style="font-size: 1.1rem; font-weight: 700;">🔥 New Trailer</h3>
-                <span style="font-size: 0.8rem; color: var(--text-muted);">Today <i class="fas fa-chevron-down"></i></span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Today <i
+                        class="fas fa-chevron-down"></i></span>
             </div>
 
             {% for movie in trending_movies|slice:"1:4" %}
             <a href="{% url 'movie_detail' movie.id %}" class="side-item">
-                <img src="" class="side-thumb" alt="{{ movie.title }}">
+                {% if movie.poster_path %}
+                <img src="https://image.tmdb.org/t/p/w200{{ movie.poster_path }}" class="side-thumb"
+                    alt="{{ movie.title }}">
+                {% else %}
+                <img src="https://via.placeholder.com/200x300/1a1a1a/ffffff?text={{ movie.title|urlencode }}"
+                    class="side-thumb" alt="{{ movie.title }}">
+                {% endif %}
                 <div style="flex: 1;">
                     <h4 style="font-size: 0.9rem; line-height: 1.3; margin-bottom: 0.3rem;">{{ movie.title }}</h4>
-                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--text-muted);">
-                        <i class="fas fa-star" style="color: var(--warning);"></i> {{ movie.vote_average|floatformat:1 }}
+                    <div
+                        style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--text-muted);">
+                        <i class="fas fa-star" style="color: var(--warning);"></i> {{ movie.vote_average|floatformat:1}}
                     </div>
                 </div>
                 <div class="btn-icon-round" style="width: 32px; height: 32px; font-size: 0.7rem;">
@@ -260,8 +269,10 @@
             {% for movie in popular_movies|slice:":3" %}
             <a href="{% url 'movie_detail' movie.id %}" class="side-item">
                 <div style="position: relative;">
-                    <img src="https://image.tmdb.org/t/p/w200{{ movie.backdrop_path }}" class="side-thumb" style="width: 80px; height: 50px; border-radius: 8px;">
-                    <div style="position: absolute; bottom: 0; left: 0; height: 3px; background: var(--primary); border-radius: 3px; width: {% if forloop.first %}80%{% elif forloop.counter == 2 %}40%{% else %}10%{% endif %};">
+                    <img src="https://image.tmdb.org/t/p/w200{{ movie.backdrop_path }}" class="side-thumb"
+                        style="width: 80px; height: 50px; border-radius: 8px;">
+                    <div
+                        style="position: absolute; bottom: 0; left: 0; height: 3px; background: var(--primary); border-radius: 3px; width: {% if forloop.first %}80%{% elif forloop.counter == 2 %}40%{% else %}10%{% endif %};">
                     </div>
                 </div>
                 <div style="flex: 1;">
@@ -277,10 +288,12 @@
     <div>
         <!-- Featured Hero -->
         {% if trending_movies %}
-        <div class="hero" style="margin: 0 0 3rem 0; background: url('https://image.tmdb.org/t/p/original{{ trending_movies.0.backdrop_path }}') center/cover;">
+        <div class="hero"
+            style="margin: 0 0 3rem 0; background: url('https://image.tmdb.org/t/p/original{{ trending_movies.0.backdrop_path }}') center/cover;">
             <div class="hero-content" style="padding: 0;">
                 <div class="hero-meta" style="margin-bottom: 1rem;">
-                    <span class="badge-pill" style="background: rgba(229, 9, 20, 0.8);"><i class="fas fa-fire"></i> Now Trending</span>
+                    <span class="badge-pill" style="background: rgba(229, 9, 20, 0.8);"><i class="fas fa-fire"></i> Now
+                        Trending</span>
                 </div>
                 <h1 class="hero-title">{{ trending_movies.0.title }}</h1>
                 <p class="hero-description">{{ trending_movies.0.overview }}</p>
@@ -289,7 +302,8 @@
                     <a href="{% url 'movie_detail' trending_movies.0.id %}" class="btn btn-primary">
                         <i class="fas fa-play"></i> Watch Now
                     </a>
-                    <a href="{% url 'movie_detail' trending_movies.0.id %}" class="btn-icon-round" style="width: 50px; height: 50px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">
+                    <a href="{% url 'movie_detail' trending_movies.0.id %}" class="btn-icon-round"
+                        style="width: 50px; height: 50px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">
                         <i class="fas fa-plus"></i>
                     </a>
                 </div>
@@ -313,7 +327,8 @@
                         {% if movie.backdrop_path %}
                         <img src="https://image.tmdb.org/t/p/w780{{ movie.backdrop_path }}" alt="{{ movie.title }}">
                         {% else %}
-                        <img src="https://via.placeholder.com/500x500/1a1a1a/ffffff?text={{ movie.title|urlencode }}" alt="{{ movie.title }}">
+                        <img src="https://via.placeholder.com/500x500/1a1a1a/ffffff?text={{ movie.title|urlencode }}"
+                            alt="{{ movie.title }}">
                         {% endif %}
 
                         <!-- Gradient Overlay -->
@@ -321,17 +336,18 @@
 
                         <!-- More Button (Top Right) -->
                         <div class="more-button">
-                            <div class="btn-icon-round" style="width: 42px; height: 42px; background: rgba(255,255,255,0.1); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px;">
+                            <div class="btn-icon-round"
+                                style="width: 42px; height: 42px; background: rgba(255,255,255,0.1); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px;">
                                 <i class="fas fa-ellipsis-h" style="font-size: 1rem; color: rgba(255,255,255,0.9);"></i>
                             </div>
                         </div>
 
                         <!-- Genre Badge -->
-                        <div class="genre-badge">
+                        <!-- <div class="genre-badge">
                             <span>
                                 {% cycle 'Fantasy' 'Mystery' 'Animation' 'Sci-fi' 'Action' 'Drama' 'Thriller' 'Comedy' 'Horror' 'Romance' 'Adventure' 'Crime' %}
                             </span>
-                        </div>
+                        </div> -->
 
                         <!-- Text Content -->
                         <div class="movie-text-content">
@@ -372,7 +388,7 @@
         }
         return cookieValue;
     }
-    
+
     const csrftoken = getCookie('csrftoken');
 
     function addToWatchlist(event, movieId) {
@@ -401,17 +417,17 @@
     }
 
     // Add hover effects for movie cards
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const movieCards = document.querySelectorAll('.movie-card');
         movieCards.forEach(card => {
-            card.addEventListener('mouseenter', function() {
+            card.addEventListener('mouseenter', function () {
                 const playBtn = this.querySelector('.play-button .btn-icon-round');
                 if (playBtn) {
                     playBtn.style.transform = 'scale(1.1)';
                 }
             });
-            
-            card.addEventListener('mouseleave', function() {
+
+            card.addEventListener('mouseleave', function () {
                 const playBtn = this.querySelector('.play-button .btn-icon-round');
                 if (playBtn) {
                     playBtn.style.transform = 'scale(1)';
