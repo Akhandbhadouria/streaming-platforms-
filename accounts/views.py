@@ -15,7 +15,7 @@ def register(request):
         if form.is_valid():
             user = form.save()
             login(request, user)
-            messages.success(request, 'Registration successful! Welcome to MovieStream!')
+            messages.success(request, 'Registration successful! Welcome to Aura!')
             return redirect('home')
         else:
             messages.error(request, 'Registration failed. Please check the form.')

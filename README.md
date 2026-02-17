@@ -1,4 +1,4 @@
-# MovieStream Platform
+# Aura Platform
 
 A modern, responsive movie streaming platform built with Django, featuring TMDB (The Movie Database) integration for movie data and YouTube API for trailers.
 
@@ -59,7 +59,7 @@ A modern, responsive movie streaming platform built with Django, featuring TMDB 
 
 ## Project Structure
 
-- `moviestream/`: Main project configuration
+- `Aura/`: Main project configuration
 - `movies/`: Core app handling movie data, API integration, and views
 - `accounts/`: User authentication and profile management
 - `templates/`: HTML templates for all pages

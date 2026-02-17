@@ -5,8 +5,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="MovieStream - Your ultimate destination for movies">
-    <title>{% block title %}MovieStream - Watch Movies Online{% endblock %}</title>
+    <meta name="description" content="Aura - Your ultimate destination for movies">
+    <title>{% block title %}Aura - Watch Movies Online{% endblock %}</title>
 
     <!-- CSS -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
@@ -21,7 +21,7 @@
     <!-- Navigation -->
     <nav class="navbar" id="navbar">
         <div style="display: flex; align-items: center; gap: 2rem;">
-            <a href="{% url 'home' %}" class="navbar-brand">MovieStream</a>
+            <a href="{% url 'home' %}" class="navbar-brand">Aura</a>
 
             <form action="{% url 'search' %}" method="GET" class="search-bar">
                 <i class="fas fa-search search-icon"></i>
@@ -100,7 +100,7 @@
             <div
                 style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
                 <div>
-                    <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">MovieStream</h3>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">Aura</h3>
                     <p style="color: var(--text-secondary); font-size: 0.9rem;">Your ultimate destination for streaming
                         the best movies from around the world.</p>
                 </div>
@@ -132,7 +132,7 @@
             </div>
             <div
                 style="text-align: center; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); font-size: 0.9rem;">
-                <p>&copy; 2026 MovieStream. All rights reserved. Powered by TMDB API.</p>
+                <p>&copy; 2026 Aura. All rights reserved. Powered by TMDB API.</p>
             </div>
         </div>
     </footer>
