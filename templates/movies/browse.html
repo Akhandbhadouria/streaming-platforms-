@@ -1,0 +1,700 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Browse Movies - MovieStream{% endblock %}
+
+{% block extra_css %}
+<style>
+    .browse-header {
+        margin-bottom: 3rem;
+        background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 100%);
+        padding: 2rem 0;
+        border-radius: 0 0 50px 50px;
+    }
+
+    .browse-title {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 2rem;
+        background: linear-gradient(135deg, #fff 0%, #e50914 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        display: inline-block;
+    }
+
+    /* Category Filter Styles */
+    .category-filter {
+        display: flex;
+        gap: 0.8rem;
+        flex-wrap: wrap;
+        margin-bottom: 2rem;
+        padding: 0.5rem 0;
+    }
+
+    .category-btn {
+        padding: 0.7rem 1.8rem;
+        border-radius: 40px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(10px);
+    }
+
+    .category-btn:hover {
+        background: rgba(229, 9, 20, 0.2);
+        border-color: rgba(229, 9, 20, 0.3);
+        transform: translateY(-2px);
+        color: white;
+    }
+
+    .category-btn.active {
+        background: #e50914;
+        color: white;
+        border-color: #e50914;
+        box-shadow: 0 5px 15px rgba(229, 9, 20, 0.3);
+    }
+
+    /* Search Bar Styles */
+    .search-wrapper {
+        max-width: 600px;
+        margin: 2rem 0;
+    }
+
+    .search-bar {
+        position: relative;
+        width: 100%;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 1.2rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 1rem;
+        z-index: 1;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 1rem 1rem 1rem 3rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50px;
+        color: white;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: #e50914;
+        background: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 0 20px rgba(229, 9, 20, 0.2);
+    }
+
+    .search-input::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Movies Grid */
+    .browse-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 2rem;
+        padding: 1rem 0 3rem 0;
+    }
+
+    .browse-movie-card {
+        position: relative;
+        border-radius: 16px;
+        overflow: hidden;
+        background: #1a1a1a;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        transition: all 0.4s cubic-bezier(0.2, 0, 0, 1);
+        text-decoration: none;
+        display: block;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .browse-movie-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(229, 9, 20, 0.3);
+        border-color: rgba(229, 9, 20, 0.3);
+    }
+
+    .browse-movie-image {
+        position: relative;
+        aspect-ratio: 2/3;
+        overflow: hidden;
+    }
+
+    .browse-movie-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.6s ease;
+    }
+
+    .browse-movie-card:hover .browse-movie-image img {
+        transform: scale(1.15);
+    }
+
+    /* Hidden Badge */
+    .hidden-badge {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        background: #e50914;
+        color: white;
+        padding: 0.3rem 1rem;
+        border-radius: 30px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        z-index: 3;
+        box-shadow: 0 4px 10px rgba(229, 9, 20, 0.3);
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .hidden-badge i {
+        margin-right: 0.3rem;
+        font-size: 0.6rem;
+    }
+
+    /* Movie Overlay */
+    .browse-movie-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(180deg, 
+            rgba(0,0,0,0.2) 0%, 
+            rgba(0,0,0,0.6) 60%, 
+            rgba(0,0,0,0.95) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 1.5rem;
+        z-index: 2;
+    }
+
+    .browse-movie-card:hover .browse-movie-overlay {
+        opacity: 1;
+    }
+
+    /* Rating Badge */
+    .browse-movie-rating {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(5px);
+        padding: 0.4rem 1rem;
+        border-radius: 30px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #ffd700;
+        border: 1px solid rgba(255, 215, 0, 0.3);
+        z-index: 3;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .browse-movie-rating i {
+        font-size: 0.8rem;
+    }
+
+    /* Movie Info */
+    .browse-movie-info {
+        position: relative;
+        z-index: 3;
+    }
+
+    .browse-movie-info h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 0.3rem;
+        color: white;
+        line-height: 1.3;
+    }
+
+    .browse-movie-year {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.6);
+        margin: 0;
+    }
+
+    /* Quick Actions */
+    .browse-movie-actions {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        z-index: 4;
+        opacity: 0;
+        transform: translateX(10px);
+        transition: all 0.3s ease;
+    }
+
+    .browse-movie-card:hover .browse-movie-actions {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    .btn-quick-add {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: rgba(229, 9, 20, 0.9);
+        border: none;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(5px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-quick-add:hover {
+        background: #e50914;
+        transform: scale(1.1) rotate(90deg);
+    }
+
+    .btn-quick-add i {
+        font-size: 1rem;
+    }
+
+    /* Pagination Styles */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.8rem;
+        margin: 3rem 0 2rem;
+        flex-wrap: wrap;
+    }
+
+    .page-btn {
+        min-width: 45px;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: all 0.3s ease;
+        font-weight: 600;
+    }
+
+    .page-btn:hover:not(.active) {
+        background: rgba(229, 9, 20, 0.2);
+        border-color: rgba(229, 9, 20, 0.3);
+        transform: translateY(-2px);
+        color: white;
+    }
+
+    .page-btn.active {
+        background: #e50914;
+        color: white;
+        border-color: #e50914;
+        box-shadow: 0 5px 15px rgba(229, 9, 20, 0.3);
+    }
+
+    .page-info {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+        margin: 0 0.5rem;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 30px;
+        border: 2px dashed rgba(255, 255, 255, 0.1);
+        max-width: 600px;
+        margin: 3rem auto;
+    }
+
+    .empty-state i {
+        font-size: 5rem;
+        color: rgba(229, 9, 20, 0.3);
+        margin-bottom: 1.5rem;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); opacity: 0.3; }
+        50% { transform: scale(1.1); opacity: 0.5; }
+        100% { transform: scale(1); opacity: 0.3; }
+    }
+
+    .empty-state h2 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state p {
+        color: var(--text-muted);
+        font-size: 1.1rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .browse-title {
+            font-size: 2.2rem;
+        }
+
+        .browse-grid {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1.2rem;
+        }
+
+        .category-filter {
+            gap: 0.5rem;
+        }
+
+        .category-btn {
+            padding: 0.5rem 1.2rem;
+            font-size: 0.85rem;
+        }
+
+        .browse-movie-actions {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .browse-movie-overlay {
+            opacity: 1;
+            background: linear-gradient(180deg, 
+                rgba(0,0,0,0.3) 0%, 
+                rgba(0,0,0,0.7) 60%, 
+                rgba(0,0,0,0.95) 100%);
+        }
+
+        .page-btn {
+            min-width: 40px;
+            height: 40px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container pt-6">
+    <!-- Header Section -->
+    <div class="browse-header">
+        <h1 class="browse-title">
+            <i class="fas fa-compass" style="margin-right: 1rem; -webkit-text-fill-color: #e50914;"></i>
+            Browse Movies
+        </h1>
+
+        <!-- Category Filter -->
+        <div class="category-filter">
+            <a href="{% url 'browse' %}?category=popular" 
+               class="category-btn {% if category == 'popular' %}active{% endif %}">
+                <i class="fas fa-fire"></i> Popular
+            </a>
+            <a href="{% url 'browse' %}?category=trending" 
+               class="category-btn {% if category == 'trending' %}active{% endif %}">
+                <i class="fas fa-chart-line"></i> Trending
+            </a>
+            <a href="{% url 'browse' %}?category=top_rated" 
+               class="category-btn {% if category == 'top_rated' %}active{% endif %}">
+                <i class="fas fa-star"></i> Top Rated
+            </a>
+            <a href="{% url 'browse' %}?category=upcoming" 
+               class="category-btn {% if category == 'upcoming' %}active{% endif %}">
+                <i class="fas fa-calendar-alt"></i> Upcoming
+            </a>
+            <a href="{% url 'browse' %}?category=now_playing" 
+               class="category-btn {% if category == 'now_playing' %}active{% endif %}">
+                <i class="fas fa-play-circle"></i> Now Playing
+            </a>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-wrapper">
+            <form action="{% url 'search' %}" method="get">
+                <div class="search-bar">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" name="q" class="search-input" 
+                           placeholder="Search for movies..." 
+                           value="{{ request.GET.q|default:'' }}">
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Movies Grid -->
+    {% if movies %}
+    <div class="browse-grid">
+        {% for movie in movies %}
+        <div class="browse-movie-card" data-movie-id="{{ movie.id }}">
+            <a href="{% url 'movie_detail' movie.id %}" style="text-decoration: none; display: block;">
+                <div class="browse-movie-image">
+                    {% if movie.poster_path %}
+                    <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" 
+                         alt="{{ movie.title }}" 
+                         loading="lazy">
+                    {% else %}
+                    <img src="https://via.placeholder.com/500x750/1a1a1a/ffffff?text={{ movie.title|urlencode }}"
+                         alt="{{ movie.title }}" 
+                         loading="lazy">
+                    {% endif %}
+
+                    <!-- Hidden Badge (for staff) -->
+                    {% if user.is_staff and movie.id in hidden_movies_ids %}
+                    <div class="hidden-badge">
+                        <i class="fas fa-eye-slash"></i> HIDDEN
+                    </div>
+                    {% endif %}
+
+                    <!-- Rating Badge -->
+                    <div class="browse-movie-rating">
+                        <i class="fas fa-star"></i>
+                        <span>{{ movie.vote_average|floatformat:1 }}</span>
+                    </div>
+
+                    <!-- Hover Overlay -->
+                    <div class="browse-movie-overlay">
+                        <div class="browse-movie-info">
+                            <h3>{{ movie.title }}</h3>
+                            {% if movie.release_date %}
+                            <p class="browse-movie-year">{{ movie.release_date|date:"Y" }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Quick Add to Watchlist -->
+            {% if user.is_authenticated %}
+            <div class="browse-movie-actions">
+                <button class="btn-quick-add" onclick="addToWatchlist(event, {{ movie.id }})" 
+                        title="Add to Watchlist">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="pagination">
+        {% if current_page > 1 %}
+        <a href="?category={{ category }}&page={{ current_page|add:'-1' }}" class="page-btn" title="Previous Page">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        {% endif %}
+
+        {% for page_num in page_range|default:'' %}
+            {% if page_num == current_page %}
+            <span class="page-btn active">{{ page_num }}</span>
+            {% elif page_num == '...' %}
+            <span class="page-info">...</span>
+            {% else %}
+            <a href="?category={{ category }}&page={{ page_num }}" class="page-btn">{{ page_num }}</a>
+            {% endif %}
+        {% endfor %}
+
+        <span class="page-info">of {{ total_pages }}</span>
+
+        {% if current_page < total_pages %} 
+        <a href="?category={{ category }}&page={{ current_page|add:'1' }}" class="page-btn" title="Next Page">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+        <i class="fas fa-film"></i>
+        <h2>No movies found</h2>
+        <p>Try adjusting your search or filter to find what you're looking for.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Get CSRF token from cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    const csrftoken = window.csrftoken || getCookie('csrftoken');
+
+    function addToWatchlist(event, movieId) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        const button = event.currentTarget;
+        const originalHtml = button.innerHTML;
+
+        // Show loading state
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        button.style.background = '#28a745';
+        button.disabled = true;
+
+        fetch(`/watchlist/add/${movieId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Show success state
+                button.innerHTML = '<i class="fas fa-check"></i>';
+                button.style.background = '#28a745';
+                
+                // Show notification
+                showNotification('Added to watchlist!', 'success');
+                
+                // Reset button after 2 seconds
+                setTimeout(() => {
+                    button.innerHTML = '<i class="fas fa-plus"></i>';
+                    button.style.background = '';
+                    button.disabled = false;
+                }, 2000);
+            } else {
+                // Show error state
+                button.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+                button.style.background = '#dc3545';
+                
+                alert('Error: ' + data.message);
+                
+                // Reset button after 2 seconds
+                setTimeout(() => {
+                    button.innerHTML = '<i class="fas fa-plus"></i>';
+                    button.style.background = '';
+                    button.disabled = false;
+                }, 2000);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            button.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+            button.style.background = '#dc3545';
+            
+            alert('An error occurred');
+            
+            setTimeout(() => {
+                button.innerHTML = '<i class="fas fa-plus"></i>';
+                button.style.background = '';
+                button.disabled = false;
+            }, 2000);
+        });
+    }
+
+    // Show notification function
+    function showNotification(message, type = 'success') {
+        // Remove existing notification if any
+        const existingNotification = document.querySelector('.notification');
+        if (existingNotification) {
+            existingNotification.remove();
+        }
+
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+            ${message}
+        `;
+        
+        // Add styles
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: ${type === 'success' ? '#28a745' : '#dc3545'};
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 50px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            z-index: 9999;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            animation: slideIn 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+        `;
+        
+        // Add animation styles if not already present
+        if (!document.querySelector('#notification-styles')) {
+            const style = document.createElement('style');
+            style.id = 'notification-styles';
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        document.body.appendChild(notification);
+        
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease forwards';
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+
+    // Add active state to current category in navigation
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentCategory = '{{ category }}';
+        const categoryLinks = document.querySelectorAll('.category-btn');
+        
+        categoryLinks.forEach(link => {
+            if (link.href.includes(`category=${currentCategory}`)) {
+                link.classList.add('active');
+            }
+        });
+    });
+</script>
+{% endblock %}

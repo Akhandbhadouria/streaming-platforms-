@@ -1,0 +1,173 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="MovieStream - Your ultimate destination for movies">
+    <title>{% block title %}MovieStream - Watch Movies Online{% endblock %}</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+    <!-- Navigation -->
+    <nav class="navbar" id="navbar">
+        <div style="display: flex; align-items: center; gap: 2rem;">
+            <a href="{% url 'home' %}" class="navbar-brand">MovieStream</a>
+
+            <form action="{% url 'search' %}" method="GET" class="search-bar">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" name="q" class="search-input" placeholder="Search movies..."
+                    value="{{ query|default:'' }}">
+            </form>
+        </div>
+
+        <ul class="navbar-nav">
+            <li><a href="{% url 'home' %}" class="nav-link {% if request.path == '/' %}active{% endif %}">Movies</a>
+            </li>
+            <li><a href="{% url 'browse' %}?category=tv" class="nav-link">TV Series</a></li>
+            <li><a href="{% url 'browse' %}?category=animation" class="nav-link">Animation</a></li>
+            <li><a href="{% url 'browse' %}?category=mistery" class="nav-link">Mistery</a></li>
+        </ul>
+
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            {% if user.is_authenticated %}
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                {% if user.is_staff %}
+                <a href="{% url 'supervisor_dashboard' %}" class="btn-icon-round" title="Supervisor Portal"
+                    style="color: #e50914;">
+                    <i class="fas fa-shield-alt"></i>
+                </a>
+                {% endif %}
+
+                <a href="{% url 'watchlist' %}" class="btn-icon-round" title="My Watchlist">
+                    <i class="far fa-heart"></i>
+                </a>
+
+                <div
+                    style="display: flex; align-items: center; gap: 0.8rem; background: rgba(255,255,255,0.05); padding: 5px 15px 5px 5px; border-radius: var(--radius-pill); border: 1px solid rgba(255,255,255,0.1);">
+                    <div
+                        style="width: 35px; height: 35px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem;">
+                        {{ user.username|first|upper }}
+                    </div>
+                    <span style="font-size: 0.85rem; font-weight: 600;">{{ user.username }}</span>
+
+                    <form action="{% url 'logout' %}" method="post" style="display: inline; margin-left: 5px;">
+                        {% csrf_token %}
+                        <button type="submit"
+                            style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.8rem;">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <a href="{% url 'login' %}" class="nav-link">Login</a>
+            <a href="{% url 'register' %}" class="btn btn-primary"
+                style="padding: 0.6rem 1.5rem; font-size: 0.85rem;">Sign Up</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main style="padding-top: 80px;">
+        {% if messages %}
+        <div class="container">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}"
+                style="padding: 1rem; margin: 1rem 0; border-radius: 8px; background: {% if message.tags == 'success' %}var(--success){% elif message.tags == 'error' %}var(--danger){% else %}var(--primary){% endif %}; opacity: 0.9;">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer
+        style="background: var(--dark-alt); padding: 3rem 0; margin-top: 4rem; border-top: 1px solid rgba(255,255,255,0.1);">
+        <div class="container">
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin-bottom: 2rem;">
+                <div>
+                    <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">MovieStream</h3>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Your ultimate destination for streaming
+                        the best movies from around the world.</p>
+                </div>
+                <div>
+                    <h4 style="font-size: 1rem; margin-bottom: 1rem;">Quick Links</h4>
+                    <ul style="list-style: none;">
+                        <li style="margin-bottom: 0.5rem;"><a href="{% url 'home' %}"
+                                style="color: var(--text-secondary); font-size: 0.9rem;">Home</a></li>
+                        <li style="margin-bottom: 0.5rem;"><a href="{% url 'browse' %}"
+                                style="color: var(--text-secondary); font-size: 0.9rem;">Browse Movies</a></li>
+                        {% if user.is_authenticated %}
+                        <li style="margin-bottom: 0.5rem;"><a href="{% url 'watchlist' %}"
+                                style="color: var(--text-secondary); font-size: 0.9rem;">My Watchlist</a></li>
+                        {% endif %}
+                        <li style="margin-top: 1rem;"><a href="{% url 'supervisor_login' %}"
+                                style="color: var(--primary); font-size: 0.8rem; border: 1px solid var(--primary); padding: 2px 8px; border-radius: 4px;">Supervisor
+                                Portal</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="font-size: 1rem; margin-bottom: 1rem;">Connect</h4>
+                    <div style="display: flex; gap: 1rem;">
+                        <a href="#" class="btn-icon"><i class="fab fa-facebook"></i></a>
+                        <a href="#" class="btn-icon"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="btn-icon"><i class="fab fa-instagram"></i></a>
+                        <a href="#" class="btn-icon"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div
+                style="text-align: center; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); font-size: 0.9rem;">
+                <p>&copy; 2026 MovieStream. All rights reserved. Powered by TMDB API.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Navbar scroll effect
+        window.addEventListener('scroll', function () {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // CSRF token for AJAX requests
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        const csrftoken = getCookie('csrftoken') || '{{ csrf_token }}';
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

@@ -1,0 +1,584 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ movie.title }} - MovieStream{% endblock %}
+
+{% block extra_css %}
+<style>
+    .movie-detail-hero {
+        position: relative;
+        min-height: 70vh;
+        display: flex;
+        align-items: flex-end;
+        background-size: cover;
+        background-position: center;
+        margin-bottom: 3rem;
+    }
+
+    .movie-detail-hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(180deg, rgba(10, 10, 10, 0.3) 0%, rgba(10, 10, 10, 0.8) 50%, rgba(10, 10, 10, 1) 100%);
+    }
+
+    .movie-detail-content {
+        position: relative;
+        z-index: 1;
+        padding: 3rem;
+        max-width: 1400px;
+        margin: 0 auto;
+        width: 100%;
+    }
+
+    .movie-info-grid {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 3rem;
+        margin-top: 2rem;
+    }
+
+    .movie-poster {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .movie-poster img {
+        width: 100%;
+        display: block;
+    }
+
+    .movie-details h1 {
+        font-size: 3rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        letter-spacing: -1px;
+    }
+
+    .movie-tagline {
+        font-size: 1.2rem;
+        color: var(--text-secondary);
+        font-style: italic;
+        margin-bottom: 1.5rem;
+    }
+
+    .movie-meta {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1.1rem;
+    }
+
+    .rating-large {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1.5rem;
+        color: var(--warning);
+        font-weight: 700;
+    }
+
+    .genres {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 2rem;
+    }
+
+    .genre-tag {
+        padding: 0.5rem 1rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        font-size: 0.9rem;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .movie-overview {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: var(--text-secondary);
+        margin-bottom: 2rem;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .trailer-section {
+        margin: 3rem 0;
+    }
+
+    .video-container {
+        position: relative;
+        padding-bottom: 56.25%;
+        height: 0;
+        overflow: hidden;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .video-container iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    .cast-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .cast-card {
+        text-align: center;
+    }
+
+    .cast-photo {
+        width: 100%;
+        aspect-ratio: 2/3;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 0.5rem;
+        background: var(--dark-lighter);
+    }
+
+    .cast-photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .cast-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .cast-character {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    /* Similar Movies Section - Fixed */
+    .similar-movies-section {
+        margin: 4rem 0;
+        padding: 0 1rem;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .section-title-with-icon {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: white;
+        margin: 0;
+    }
+
+    .section-title-with-icon i {
+        color: #e50914;
+        font-size: 2rem;
+    }
+
+    .section-count {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 0.4rem 1.2rem;
+        border-radius: 30px;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .similar-movies-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 2rem;
+        margin-top: 1.5rem;
+    }
+
+    .similar-movie-card {
+        position: relative;
+        border-radius: 16px;
+        overflow: hidden;
+        background: #1a1a1a;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        transition: all 0.4s cubic-bezier(0.2, 0, 0, 1);
+        text-decoration: none;
+        display: block;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .similar-movie-card:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(229, 9, 20, 0.3);
+        border-color: rgba(229, 9, 20, 0.3);
+    }
+
+    .similar-movie-image {
+        position: relative;
+        aspect-ratio: 2/3;
+        overflow: hidden;
+    }
+
+    .similar-movie-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.6s ease;
+    }
+
+    .similar-movie-card:hover .similar-movie-image img {
+        transform: scale(1.15);
+    }
+
+    .similar-movie-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(180deg,
+                rgba(0, 0, 0, 0.2) 0%,
+                rgba(0, 0, 0, 0.6) 60%,
+                rgba(0, 0, 0, 0.9) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 1.5rem;
+    }
+
+    .similar-movie-card:hover .similar-movie-overlay {
+        opacity: 1;
+    }
+
+    .similar-movie-rating {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(5px);
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #ffd700;
+        border: 1px solid rgba(255, 215, 0, 0.3);
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .similar-movie-rating i {
+        font-size: 0.7rem;
+    }
+
+    .similar-movie-info {
+        position: relative;
+        z-index: 2;
+    }
+
+    .similar-movie-info h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 0.3rem;
+        color: white;
+        line-height: 1.3;
+    }
+
+    .similar-movie-info p {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.6);
+        margin: 0;
+    }
+
+    @media (max-width: 768px) {
+        .movie-info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .movie-details h1 {
+            font-size: 2rem;
+        }
+
+        .similar-movies-grid {
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 1rem;
+        }
+
+        .section-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .section-title-with-icon {
+            font-size: 1.5rem;
+        }
+
+        .similar-movie-overlay {
+            opacity: 1;
+            background: linear-gradient(180deg,
+                    rgba(0, 0, 0, 0.3) 0%,
+                    rgba(0, 0, 0, 0.7) 60%,
+                    rgba(0, 0, 0, 0.95) 100%);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Movie Detail Hero -->
+<div class="movie-detail-hero" style="background-image: url('{{ movie.backdrop_url }}');">
+    <div class="movie-detail-content">
+        <div class="movie-info-grid">
+            <div class="movie-poster">
+                {% if movie.poster_url %}
+                <img src="{{ movie.poster_url }}" alt="{{ movie.title }}">
+                {% else %}
+                <img src="https://via.placeholder.com/500x750/1a1a1a/ffffff?text={{ movie.title }}"
+                    alt="{{ movie.title }}">
+                {% endif %}
+            </div>
+
+            <div class="movie-details">
+                <h1>{{ movie.title }}</h1>
+
+                {% if movie.tagline %}
+                <p class="movie-tagline">"{{ movie.tagline }}"</p>
+                {% endif %}
+
+                <div class="movie-meta">
+                    <div class="rating-large">
+                        <i class="fas fa-star"></i>
+                        <span>{{ movie.vote_average|floatformat:1 }}/10</span>
+                    </div>
+
+                    {% if movie.release_date %}
+                    <div class="meta-item">
+                        <i class="far fa-calendar"></i>
+                        <span>{{ movie.release_date|date:"M d, Y" }}</span>
+                    </div>
+                    {% endif %}
+
+                    {% if movie.runtime %}
+                    <div class="meta-item">
+                        <i class="far fa-clock"></i>
+                        <span>{{ movie.runtime }} min</span>
+                    </div>
+                    {% endif %}
+
+                    {% if movie.status %}
+                    <div class="meta-item">
+                        <i class="fas fa-info-circle"></i>
+                        <span>{{ movie.status }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if movie_data.genres %}
+                <div class="genres">
+                    {% for genre in movie_data.genres %}
+                    <span class="genre-tag">{{ genre.name }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <p class="movie-overview">{{ movie.overview }}</p>
+
+                <div class="action-buttons">
+                    {% if movie.youtube_trailer_key %}
+                    <a href="#trailer" class="btn btn-primary">
+                        <i class="fas fa-play"></i> Watch Trailer
+                    </a>
+                    {% endif %}
+
+                    {% if user.is_authenticated %}
+                    {% if in_watchlist %}
+                    <button class="btn btn-secondary" onclick="removeFromWatchlist({{ movie.tmdb_id }})">
+                        <i class="fas fa-check"></i> In Watchlist
+                    </button>
+                    {% else %}
+                    <button class="btn btn-secondary" onclick="addToWatchlist({{ movie.tmdb_id }})">
+                        <i class="fas fa-plus"></i> Add to Watchlist
+                    </button>
+                    {% endif %}
+                    {% else %}
+                    <a href="{% url 'login' %}" class="btn btn-secondary">
+                        <i class="fas fa-plus"></i> Add to Watchlist
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Trailer Section -->
+    {% if movie.youtube_trailer_key %}
+    <section class="trailer-section" id="trailer">
+        <h2 class="section-title" style="margin-bottom: 1.5rem;">📺 Official Trailer</h2>
+        <div class="video-container">
+            <iframe src="https://www.youtube.com/embed/{{ movie.youtube_trailer_key }}?enablejsapi=1&rel=0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen>
+            </iframe>
+        </div>
+        <div class="text-center mt-3" style="margin-top: 1rem;">
+            <a href="https://www.youtube.com/watch?v={{ movie.youtube_trailer_key }}" target="_blank"
+                class="btn btn-secondary" style="background: #e50914; border-color: #e50914;">
+                <i class="fab fa-youtube"></i> Watch Directly on YouTube
+            </a>
+            <p style="margin-top: 0.5rem; color: #aaa; font-size: 0.9rem;">
+                <small>If the video above shows "Video Unavailable", click the button to watch it on YouTube.</small>
+            </p>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Cast Section -->
+    {% if cast %}
+    <section class="section">
+        <h2 class="section-title" style="margin-bottom: 1.5rem;">🎭 Cast</h2>
+        <div class="cast-grid">
+            {% for actor in cast %}
+            <div class="cast-card">
+                <div class="cast-photo">
+                    {% if actor.profile_path %}
+                    <img src="https://image.tmdb.org/t/p/w185{{ actor.profile_path }}" alt="{{ actor.name }}">
+                    {% else %}
+                    <img src="https://via.placeholder.com/185x278/1a1a1a/ffffff?text={{ actor.name|slice:':1' }}"
+                        alt="{{ actor.name }}">
+                    {% endif %}
+                </div>
+                <div class="cast-name">{{ actor.name }}</div>
+                <div class="cast-character">{{ actor.character }}</div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Similar Movies Section - FIXED -->
+    {% if similar_movies %}
+    <section class="similar-movies-section">
+        <div class="section-header">
+            <h2 class="section-title-with-icon">
+                <i class="fas fa-clapperboard"></i> Similar Movies
+            </h2>
+            <span class="section-count">{{ similar_movies|length }} Movies</span>
+        </div>
+
+        <div class="similar-movies-grid">
+            {% for similar in similar_movies %}
+            <a href="{% url 'movie_detail' similar.id %}" class="similar-movie-card">
+                <div class="similar-movie-image">
+                    {% if similar.poster_path %}
+                    <img src="https://image.tmdb.org/t/p/w500{{ similar.poster_path }}" alt="{{ similar.title }}"
+                        loading="lazy">
+                    {% else %}
+                    <img src="https://via.placeholder.com/500x750/1a1a1a/ffffff?text={{ similar.title|urlencode }}"
+                        alt="{{ similar.title }}" loading="lazy">
+                    {% endif %}
+
+                    <!-- Rating badge -->
+                    <div class="similar-movie-rating">
+                        <i class="fas fa-star"></i>
+                        <span>{{ similar.vote_average|floatformat:1 }}</span>
+                    </div>
+
+                    <!-- Hover overlay -->
+                    <div class="similar-movie-overlay">
+                        <div class="similar-movie-info">
+                            <h3>{{ similar.title }}</h3>
+                            {% if similar.release_date %}
+                            <p>{{ similar.release_date|date:"Y" }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function addToWatchlist(movieId) {
+        fetch(`/watchlist/add/${movieId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json',
+            },
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred');
+            });
+    }
+
+    function removeFromWatchlist(movieId) {
+        fetch(`/watchlist/remove/${movieId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json',
+            },
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred');
+            });
+    }
+</script>
+{% endblock %}

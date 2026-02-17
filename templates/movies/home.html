@@ -1,0 +1,423 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}MovieStream - Watch Movies Online{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* You Might Like Section Styles */
+    .you-might-like-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2.5rem;
+        padding: 0 10px;
+    }
+
+    .you-might-like-header h2 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: white;
+        margin: 0;
+        background: linear-gradient(90deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .see-all-link {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 0.6rem 1.6rem;
+        border-radius: 30px;
+        text-decoration: none;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.85rem;
+        font-weight: 600;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .see-all-link:hover {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+        transform: translateX(5px);
+    }
+
+    .see-all-link i {
+        font-size: 0.7rem;
+        transition: transform 0.3s ease;
+    }
+
+    .see-all-link:hover i {
+        transform: translateX(3px);
+    }
+
+    .movie-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 2.5rem;
+        padding: 0 10px;
+    }
+
+    .movie-card-container {
+        position: relative;
+        transition: transform 0.3s ease;
+    }
+
+    .movie-card-container:hover {
+        transform: translateY(-10px);
+    }
+
+    .movie-card {
+        aspect-ratio: 1/1.1;
+        position: relative;
+        border-radius: 40px;
+        border: none;
+        display: block;
+        overflow: hidden;
+        background: #1a1a1a;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        text-decoration: none;
+        transition: box-shadow 0.3s ease;
+    }
+
+    .movie-card:hover {
+        box-shadow: 0 30px 60px rgba(229, 9, 20, 0.3);
+    }
+
+    .movie-card-image {
+        height: 100%;
+        width: 100%;
+        position: relative;
+    }
+
+    .movie-card-image img {
+        height: 100%;
+        width: 100%;
+        object-fit: cover;
+        transition: transform 0.6s cubic-bezier(0.2, 0, 0.2, 1);
+    }
+
+    .movie-card:hover .movie-card-image img {
+        transform: scale(1.1);
+    }
+
+    .gradient-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 75%;
+        background: linear-gradient(0deg, rgba(15, 15, 15, 1) 0%, rgba(15, 15, 15, 0.6) 40%, transparent 100%);
+        z-index: 1;
+    }
+
+    .more-button {
+        position: absolute;
+        top: 1.5rem;
+        right: 1.5rem;
+        z-index: 2;
+    }
+
+    .genre-badge {
+        position: absolute;
+        bottom: 6.8rem;
+        left: 1.8rem;
+        z-index: 2;
+    }
+
+    .genre-badge span {
+        font-size: 0.75rem;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(12px);
+        padding: 0.4rem 1.1rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.6);
+        font-weight: 500;
+        border-radius: 12px;
+        display: inline-block;
+    }
+
+    .movie-text-content {
+        position: absolute;
+        bottom: 2rem;
+        left: 2rem;
+        right: 25%;
+        z-index: 2;
+    }
+
+    .movie-text-content h3 {
+        font-size: 1.25rem;
+        font-weight: 800;
+        margin-bottom: 0.4rem;
+        color: white;
+        letter-spacing: -0.5px;
+        line-height: 1.2;
+    }
+
+    .movie-text-content p {
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.5);
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-height: 1.4;
+        line-clamp: 2;
+        margin: 0;
+    }
+
+    .play-button {
+        position: absolute;
+        bottom: 2rem;
+        right: 2rem;
+        z-index: 2;
+    }
+
+    .play-button .btn-icon-round {
+        width: 58px;
+        height: 58px;
+        background: white;
+        color: black;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+    }
+
+    .play-button .btn-icon-round:hover {
+        background: var(--primary);
+        color: white;
+        transform: scale(1.1);
+    }
+
+    .play-button .btn-icon-round i {
+        font-size: 1.1rem;
+        margin-left: 4px;
+    }
+
+    @media (max-width: 768px) {
+        .you-might-like-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        
+        .you-might-like-header h2 {
+            font-size: 1.5rem;
+        }
+        
+        .movie-grid {
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .movie-card {
+            border-radius: 30px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 320px 1fr; gap: 2.5rem; padding: 120px 40px 40px 40px; max-width: 1700px; margin: 0 auto;">
+
+    <!-- Sidebar -->
+    <div style="display: flex; flex-direction: column; gap: 2rem;">
+        <!-- New Trailer Section -->
+        <div class="side-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h3 style="font-size: 1.1rem; font-weight: 700;">🔥 New Trailer</h3>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Today <i class="fas fa-chevron-down"></i></span>
+            </div>
+
+            {% for movie in trending_movies|slice:"1:4" %}
+            <a href="{% url 'movie_detail' movie.id %}" class="side-item">
+                <img src="https://image.tmdb.org/t/p/w200{{ movie.poster_path }}" class="side-thumb" alt="{{ movie.title }}">
+                <div style="flex: 1;">
+                    <h4 style="font-size: 0.9rem; line-height: 1.3; margin-bottom: 0.3rem;">{{ movie.title }}</h4>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--text-muted);">
+                        <i class="fas fa-star" style="color: var(--warning);"></i> {{ movie.vote_average|floatformat:1 }}
+                    </div>
+                </div>
+                <div class="btn-icon-round" style="width: 32px; height: 32px; font-size: 0.7rem;">
+                    <i class="fas fa-play"></i>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+
+        <!-- Continue Watching Section -->
+        <div class="side-panel">
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 2rem;">🎬 Continue Watching</h3>
+
+            {% for movie in popular_movies|slice:":3" %}
+            <a href="{% url 'movie_detail' movie.id %}" class="side-item">
+                <div style="position: relative;">
+                    <img src="https://image.tmdb.org/t/p/w200{{ movie.backdrop_path }}" class="side-thumb" style="width: 80px; height: 50px; border-radius: 8px;">
+                    <div style="position: absolute; bottom: 0; left: 0; height: 3px; background: var(--primary); border-radius: 3px; width: {% if forloop.first %}80%{% elif forloop.counter == 2 %}40%{% else %}10%{% endif %};">
+                    </div>
+                </div>
+                <div style="flex: 1;">
+                    <h4 style="font-size: 0.85rem; margin-bottom: 0.2rem;">{{ movie.title }}</h4>
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">Season 1</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div>
+        <!-- Featured Hero -->
+        {% if trending_movies %}
+        <div class="hero" style="margin: 0 0 3rem 0; background: url('https://image.tmdb.org/t/p/original{{ trending_movies.0.backdrop_path }}') center/cover;">
+            <div class="hero-content" style="padding: 0;">
+                <div class="hero-meta" style="margin-bottom: 1rem;">
+                    <span class="badge-pill" style="background: rgba(229, 9, 20, 0.8);"><i class="fas fa-fire"></i> Now Trending</span>
+                </div>
+                <h1 class="hero-title">{{ trending_movies.0.title }}</h1>
+                <p class="hero-description">{{ trending_movies.0.overview }}</p>
+
+                <div class="hero-actions">
+                    <a href="{% url 'movie_detail' trending_movies.0.id %}" class="btn btn-primary">
+                        <i class="fas fa-play"></i> Watch Now
+                    </a>
+                    <a href="{% url 'movie_detail' trending_movies.0.id %}" class="btn-icon-round" style="width: 50px; height: 50px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);">
+                        <i class="fas fa-plus"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- You Might Like Section -->
+        <div class="you-might-like-header">
+            <h2>You might like</h2>
+            <a href="{% url 'browse' %}" class="see-all-link">
+                See all <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+
+        <div class="movie-grid">
+            {% for movie in top_rated_movies|slice:":12" %}
+            <div class="movie-card-container">
+                <a href="{% url 'movie_detail' movie.id %}" class="movie-card">
+                    <div class="movie-card-image">
+                        {% if movie.backdrop_path %}
+                        <img src="https://image.tmdb.org/t/p/w780{{ movie.backdrop_path }}" alt="{{ movie.title }}">
+                        {% else %}
+                        <img src="https://via.placeholder.com/500x500/1a1a1a/ffffff?text={{ movie.title|urlencode }}" alt="{{ movie.title }}">
+                        {% endif %}
+
+                        <!-- Gradient Overlay -->
+                        <div class="gradient-overlay"></div>
+
+                        <!-- More Button (Top Right) -->
+                        <div class="more-button">
+                            <div class="btn-icon-round" style="width: 42px; height: 42px; background: rgba(255,255,255,0.1); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px;">
+                                <i class="fas fa-ellipsis-h" style="font-size: 1rem; color: rgba(255,255,255,0.9);"></i>
+                            </div>
+                        </div>
+
+                        <!-- Genre Badge -->
+                        <div class="genre-badge">
+                            <span>
+                                {% cycle 'Fantasy' 'Mystery' 'Animation' 'Sci-fi' 'Action' 'Drama' 'Thriller' 'Comedy' 'Horror' 'Romance' 'Adventure' 'Crime' %}
+                            </span>
+                        </div>
+
+                        <!-- Text Content -->
+                        <div class="movie-text-content">
+                            <h3>{{ movie.title }}</h3>
+                            <p>{{ movie.overview|default:"A gripping cinematic experience that pushes the boundaries of storytelling." }}</p>
+                        </div>
+
+                        <!-- Play Button -->
+                        <div class="play-button">
+                            <div class="btn-icon-round">
+                                <i class="fas fa-play"></i>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Get CSRF token from cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    const csrftoken = getCookie('csrftoken');
+
+    function addToWatchlist(event, movieId) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        fetch(`/watchlist/add/${movieId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json',
+            },
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert('Added to watchlist!');
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred');
+            });
+    }
+
+    // Add hover effects for movie cards
+    document.addEventListener('DOMContentLoaded', function() {
+        const movieCards = document.querySelectorAll('.movie-card');
+        movieCards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                const playBtn = this.querySelector('.play-button .btn-icon-round');
+                if (playBtn) {
+                    playBtn.style.transform = 'scale(1.1)';
+                }
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                const playBtn = this.querySelector('.play-button .btn-icon-round');
+                if (playBtn) {
+                    playBtn.style.transform = 'scale(1)';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}
