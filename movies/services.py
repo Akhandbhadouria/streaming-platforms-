@@ -1,6 +1,10 @@
 import requests
+import logging
 from django.conf import settings
 from datetime import datetime
+
+# Configure logger
+logger = logging.getLogger(__name__)
 
 class TMDBService:
     """Service to interact with TMDB API"""
@@ -26,7 +30,7 @@ class TMDBService:
             response.raise_for_status()
             return response.json()
         except requests.exceptions.RequestException as e:
-            print(f"Error making request to TMDB: {e}")
+            logger.error(f"Error making request to TMDB: {e}")
             return None
     
     def get_popular_movies(self, page=1):
@@ -100,7 +104,7 @@ class TMDBService:
                 'status': movie_data.get('status', ''),
             }
         except Exception as e:
-            print(f"Error parsing movie data: {e}")
+            logger.error(f"Error parsing movie data: {e}")
             return None
 
 
@@ -156,5 +160,5 @@ class YouTubeService:
                 return data['items'][0]['id']['videoId']
             return None
         except requests.exceptions.RequestException as e:
-            print(f"Error searching YouTube: {e}")
+            logger.error(f"Error searching YouTube: {e}")
             return None

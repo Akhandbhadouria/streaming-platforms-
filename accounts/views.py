@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from .forms import CustomUserCreationForm, CustomAuthenticationForm
 
 
 def register(request):
@@ -11,7 +11,7 @@ def register(request):
         return redirect('home')
     
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
@@ -20,7 +20,7 @@ def register(request):
         else:
             messages.error(request, 'Registration failed. Please check the form.')
     else:
-        form = UserCreationForm()
+        form = CustomUserCreationForm()
     
     return render(request, 'accounts/register.html', {'form': form})
 
@@ -31,7 +31,7 @@ def user_login(request):
         return redirect('home')
     
     if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
+        form = CustomAuthenticationForm(request, data=request.POST)
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
@@ -46,7 +46,7 @@ def user_login(request):
         else:
             messages.error(request, 'Invalid username or password.')
     else:
-        form = AuthenticationForm()
+        form = CustomAuthenticationForm()
     
     return render(request, 'accounts/login.html', {'form': form})
 
@@ -57,7 +57,7 @@ def supervisor_login(request):
         return redirect('supervisor_dashboard')
     
     if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
+        form = CustomAuthenticationForm(request, data=request.POST)
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
@@ -74,7 +74,7 @@ def supervisor_login(request):
         else:
             messages.error(request, 'Invalid username or password.')
     else:
-        form = AuthenticationForm()
+        form = CustomAuthenticationForm()
     
     return render(request, 'accounts/supervisor_login.html', {'form': form})
 

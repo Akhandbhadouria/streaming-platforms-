@@ -5,6 +5,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q, Count
 from .models import Movie, Watchlist, Rating, MovieView
 from .services import TMDBService, YouTubeService
+from .forms import RatingForm
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.utils import timezone
@@ -234,29 +235,37 @@ def remove_from_watchlist(request, movie_id):
 def rate_movie(request, movie_id):
     """Rate a movie"""
     if request.method == 'POST':
-        rating_value = request.POST.get('rating')
-        review_text = request.POST.get('review', '')
-        
         try:
             movie = Movie.objects.get(tmdb_id=movie_id)
-            rating, created = Rating.objects.update_or_create(
-                user=request.user,
-                movie=movie,
-                defaults={
-                    'rating': int(rating_value),
-                    'review': review_text
-                }
-            )
             
-            return JsonResponse({
-                'status': 'success',
-                'message': 'Rating saved',
-                'rating': rating.rating
-            })
+            # Try to get existing rating
+            try:
+                rating_obj = Rating.objects.get(user=request.user, movie=movie)
+                form = RatingForm(request.POST, instance=rating_obj)
+            except Rating.DoesNotExist:
+                form = RatingForm(request.POST)
+            
+            if form.is_valid():
+                rating_obj = form.save(commit=False)
+                rating_obj.user = request.user
+                rating_obj.movie = movie
+                rating_obj.save()
+                
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Rating saved',
+                    'rating': rating_obj.rating
+                })
+            else:
+                # Return form errors
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Invalid rating',
+                    'errors': form.errors
+                }, status=400)
+                
         except Movie.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Movie not found'}, status=404)
-        except (ValueError, TypeError):
-            return JsonResponse({'status': 'error', 'message': 'Invalid rating'}, status=400)
     
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
@@ -291,7 +300,13 @@ def toggle_hide_movie(request, movie_id):
 @staff_member_required
 def supervisor_dashboard(request):
     """Supervisor Portal / Dashboard"""
-    movies = Movie.objects.all().order_by('-updated_at')
+    all_movies = Movie.objects.all().order_by('-updated_at')
+    
+    # Add pagination
+    paginator = Paginator(all_movies, 20)  # Show 20 movies per page
+    page_number = request.GET.get('page', 1)
+    movies = paginator.get_page(page_number)
+    
     hidden_count = Movie.objects.filter(is_hidden=True).count()
     
     # Analytics Data

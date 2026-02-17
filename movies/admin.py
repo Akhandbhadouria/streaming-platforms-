@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Movie, Watchlist, Rating
+from .models import Movie, Watchlist, Rating, MovieView
 
 @admin.register(Movie)
 class MovieAdmin(admin.ModelAdmin):
@@ -19,3 +19,12 @@ class RatingAdmin(admin.ModelAdmin):
     list_display = ('user', 'movie', 'rating', 'created_at')
     search_fields = ('user__username', 'movie__title')
     list_filter = ('rating', 'created_at')
+
+@admin.register(MovieView)
+class MovieViewAdmin(admin.ModelAdmin):
+    list_display = ('movie', 'user', 'ip_address', 'viewed_at')
+    search_fields = ('movie__title', 'user__username', 'ip_address')
+    list_filter = ('viewed_at',)
+    readonly_fields = ('movie', 'user', 'ip_address', 'viewed_at')
+    ordering = ('-viewed_at',)
+
