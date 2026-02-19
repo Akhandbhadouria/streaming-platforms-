@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
-import dj_database_url
 
 # Load environment variables
 load_dotenv()
@@ -87,12 +86,10 @@ WSGI_APPLICATION = 'Aura.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-if os.getenv('DATABASE_URL'):
-    DATABASES = {
-        'default': dj_database_url.config(
-            conn_max_age=600,
-        )
-    }
+_DATABASE_URL = os.getenv('DATABASE_URL', '').strip()
+if _DATABASE_URL and _DATABASE_URL.startswith('postgres'):
+    import dj_database_url as _dj
+    DATABASES = {'default': _dj.parse(_DATABASE_URL, conn_max_age=600)}
 else:
     DATABASES = {
         'default': {
