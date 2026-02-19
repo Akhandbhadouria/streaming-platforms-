@@ -33,10 +33,10 @@ def register(request):
                     recipient_list=[user.email],
                     fail_silently=False,
                 )
-            except Exception as e:
-                # If email fails, still redirect to OTP page (user can resend)
+            except BaseException as e:
+                # Catch ALL exceptions including SystemExit from gunicorn worker timeouts
                 import logging
-                logging.getLogger(__name__).error(f"Failed to send OTP email: {e}")
+                logging.getLogger(__name__).error(f"Failed to send OTP email: {type(e).__name__}: {e}")
             
             request.session['otp_user_id'] = user.id
             messages.success(request, 'Account created! Check your email for the verification code.')
