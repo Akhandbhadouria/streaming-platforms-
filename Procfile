@@ -1,1 +1,1 @@
-web: gunicorn projectname.wsgi
+web: gunicorn Aura.wsgi:application
