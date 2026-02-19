@@ -1,6 +1,4 @@
-#!/bin/sh
-'''exec' "/Users/lambardaar/Downloads/pep project /movie/venv/bin/python3.10" "$0" "$@"
-' '''
+#!/Users/msr/Documents/PythonFullStack/streaming-platforms-/venv/bin/python3
 import sys
 from django.core.management import execute_from_command_line
 if __name__ == '__main__':

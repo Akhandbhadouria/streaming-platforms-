@@ -123,24 +123,7 @@
         z-index: 2;
     }
 
-    .genre-badge {
-        position: absolute;
-        bottom: 6.8rem;
-        left: 1.8rem;
-        z-index: 2;
-    }
 
-    .genre-badge span {
-        font-size: 0.75rem;
-        background: rgba(255, 255, 255, 0.1);
-        backdrop-filter: blur(12px);
-        padding: 0.4rem 1.1rem;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: rgba(255, 255, 255, 0.6);
-        font-weight: 500;
-        border-radius: 12px;
-        display: inline-block;
-    }
 
     .movie-text-content {
         position: absolute;
@@ -269,15 +252,21 @@
             {% for movie in popular_movies|slice:":3" %}
             <a href="{% url 'movie_detail' movie.id %}" class="side-item">
                 <div style="position: relative;">
+                    {% if movie.backdrop_path %}
                     <img src="https://image.tmdb.org/t/p/w200{{ movie.backdrop_path }}" class="side-thumb"
                         style="width: 80px; height: 50px; border-radius: 8px;">
+                    {% else %}
+                    <div class="side-thumb"
+                        style="width:80px;height:50px;border-radius:8px;background:#2a2a2a;display:flex;align-items:center;justify-content:center;font-size:0.6rem;color:#999;">
+                        No Image</div>
+                    {% endif %}
                     <div
                         style="position: absolute; bottom: 0; left: 0; height: 3px; background: var(--primary); border-radius: 3px; width: {% if forloop.first %}80%{% elif forloop.counter == 2 %}40%{% else %}10%{% endif %};">
                     </div>
                 </div>
                 <div style="flex: 1;">
                     <h4 style="font-size: 0.85rem; margin-bottom: 0.2rem;">{{ movie.title }}</h4>
-                    <span style="font-size: 0.75rem; color: var(--text-muted);">Season 1</span>
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">{{ movie.release_date|date:"Y" }}</span>
                 </div>
             </a>
             {% endfor %}
@@ -352,7 +341,8 @@
                         <!-- Text Content -->
                         <div class="movie-text-content">
                             <h3>{{ movie.title }}</h3>
-                            <p>{{ movie.overview|default:"A gripping cinematic experience that pushes the boundaries of storytelling." }}</p>
+                            <p>{{ movie.overview|default:"A gripping cinematic experience that pushes the boundaries of
+                                storytelling." }}</p>
                         </div>
 
                         <!-- Play Button -->
@@ -390,31 +380,6 @@
     }
 
     const csrftoken = getCookie('csrftoken');
-
-    function addToWatchlist(event, movieId) {
-        event.preventDefault();
-        event.stopPropagation();
-
-        fetch(`/watchlist/add/${movieId}/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': csrftoken,
-                'Content-Type': 'application/json',
-            },
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    alert('Added to watchlist!');
-                } else {
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred');
-            });
-    }
 
     // Add hover effects for movie cards
     document.addEventListener('DOMContentLoaded', function () {
