@@ -262,24 +262,30 @@
             {% endfor %}
         </div>
 
-        <!-- Continue Watching Section -->
+        <!-- Top Viewed Today Section -->
         <div class="side-panel">
-            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 2rem;">🎬 Continue Watching</h3>
+            <h3 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 2rem;">📈 Top Viewed Today</h3>
 
-            {% for movie in popular_movies|slice:":3" %}
-            <a href="{% url 'movie_detail' movie.id %}" class="side-item">
+            {% for movie in top_today %}
+            <a href="{% url 'movie_detail' movie.tmdb_id %}" class="side-item">
                 <div style="position: relative;">
-                    <img src="https://image.tmdb.org/t/p/w200{{ movie.backdrop_path }}" class="side-thumb"
-                        style="width: 80px; height: 50px; border-radius: 8px;">
-                    <div
-                        style="position: absolute; bottom: 0; left: 0; height: 3px; background: var(--primary); border-radius: 3px; width: {% if forloop.first %}80%{% elif forloop.counter == 2 %}40%{% else %}10%{% endif %};">
-                    </div>
+                    {% if movie.poster_path %}
+                    <img src="{{ movie.poster_url }}" class="side-thumb"
+                        style="width: 50px; height: 75px; border-radius: 8px; object-fit: cover;">
+                    {% else %}
+                    <img src="https://via.placeholder.com/200x300/1a1a1a/ffffff?text={{ movie.title|urlencode }}"
+                        class="side-thumb" style="width: 50px; height: 75px; border-radius: 8px;">
+                    {% endif %}
                 </div>
                 <div style="flex: 1;">
                     <h4 style="font-size: 0.85rem; margin-bottom: 0.2rem;">{{ movie.title }}</h4>
-                    <span style="font-size: 0.75rem; color: var(--text-muted);">Season 1</span>
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">{{ movie.today_views }} views
+                        today</span>
                 </div>
             </a>
+            {% empty %}
+            <p style="color: var(--text-secondary); font-size: 0.85rem; text-align: center; padding: 1rem;">No views
+                recorded today.</p>
             {% endfor %}
         </div>
     </div>
@@ -352,7 +358,8 @@
                         <!-- Text Content -->
                         <div class="movie-text-content">
                             <h3>{{ movie.title }}</h3>
-                            <p>{{ movie.overview|default:"A gripping cinematic experience that pushes the boundaries of storytelling." }}</p>
+                            <p>{{ movie.overview|default:"A gripping cinematic experience that pushes the boundaries of
+                                storytelling." }}</p>
                         </div>
 
                         <!-- Play Button -->

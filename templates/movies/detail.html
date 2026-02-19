@@ -436,6 +436,19 @@
                         <i class="fas fa-plus"></i> Add to Watchlist
                     </a>
                     {% endif %}
+
+                    {% if user.is_staff %}
+                    <button id="admin-hide-btn"
+                        class="btn {% if movie.is_hidden %}btn-secondary{% else %}btn-primary{% endif %}"
+                        onclick="toggleHideDetail({{ movie.tmdb_id }})"
+                        style="{% if not movie.is_hidden %}background: #e50914; border: none; color: white;{% endif %}">
+                        {% if movie.is_hidden %}
+                        <i class="fas fa-eye"></i> Show Movie
+                        {% else %}
+                        <i class="fas fa-eye-slash"></i> Hide Movie
+                        {% endif %}
+                    </button>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -580,6 +593,42 @@
             .catch(error => {
                 console.error('Error:', error);
                 alert('An error occurred');
+            });
+    }
+
+    function toggleHideDetail(movieId) {
+        const btn = document.getElementById('admin-hide-btn');
+        btn.disabled = true;
+
+        fetch(`/movie/toggle-hide/${movieId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrftoken,
+                'Content-Type': 'application/json',
+            },
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    if (data.is_hidden) {
+                        btn.innerHTML = '<i class="fas fa-eye"></i> Show Movie';
+                        btn.className = 'btn btn-secondary';
+                        btn.style = '';
+                    } else {
+                        btn.innerHTML = '<i class="fas fa-eye-slash"></i> Hide Movie';
+                        btn.className = 'btn btn-primary';
+                        btn.style = 'background: #e50914; border: none; color: white;';
+                    }
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred');
+            })
+            .finally(() => {
+                btn.disabled = false;
             });
     }
 </script>
