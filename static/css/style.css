@@ -10,7 +10,7 @@
     --dark-alt: #1a1a1a;
     --dark-lighter: #2a2a2a;
     --text-primary: #ffffff;
-    --text-secondary: #aaaaaa;
+    --text-secondary: #ffffff;
     --text-muted: #777777;
     --accent: #46d369;
     --warning: #ffa500;
@@ -127,6 +127,7 @@ img {
 
 .nav-link {
     font-weight: 500;
+    font-style: italic;
     font-size: 0.9rem;
     color: var(--text-secondary);
     padding: 0.6rem 1.2rem;
@@ -720,7 +721,7 @@ img {
 /* Shared Movie Card Styles */
 .movie-card-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
     gap: 2rem;
     padding: 1rem 0 3rem 0;
 }

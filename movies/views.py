@@ -62,9 +62,9 @@ def home(request):
     ).order_by('-today_views')[:5]
 
     context = {
-        'trending_movies': _filter_hidden_movies(request, trending)[:20],
-        'popular_movies': _filter_hidden_movies(request, popular)[:20],
-        'top_rated_movies': _filter_hidden_movies(request, top_rated)[:20],
+        'trending_movies': _filter_hidden_movies(request, trending)[:24],
+        'popular_movies': _filter_hidden_movies(request, popular)[:24],
+        'top_rated_movies': _filter_hidden_movies(request, top_rated)[:24],
         'new_trailers': _filter_hidden_movies(request, upcoming)[:5],
         'top_today': top_today,
         'hidden_movies_ids': list(Movie.objects.filter(is_hidden=True).values_list('tmdb_id', flat=True)) if request.user.is_staff else []
@@ -442,7 +442,7 @@ def supervisor_dashboard(request):
     all_movies = Movie.objects.filter(is_hidden=True).order_by('-updated_at')
     
     # Add pagination
-    paginator = Paginator(all_movies, 20)  # Show 20 movies per page
+    paginator = Paginator(all_movies, 24)  # Show 24 movies per page
     page_number = request.GET.get('page', 1)
     movies = paginator.get_page(page_number)
     hidden_count = Movie.objects.filter(is_hidden=True).count()

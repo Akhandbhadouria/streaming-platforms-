@@ -264,10 +264,10 @@
 <div class="container pt-6">
     <!-- Header Section -->
     <div class="browse-header">
-        <h1 class="browse-title">
+        <!-- <h1 class="browse-title">
             <i class="fas fa-compass" style="margin-right: 1rem; -webkit-text-fill-color: #e50914;"></i>
             Browse Movies
-        </h1>
+        </h1> -->
 
         <!-- Genre Filter -->
         {% if genres %}
@@ -298,7 +298,7 @@
 
 <!-- Movies Grid -->
 {% if movies %}
-<div class="movie-card-grid">
+<div class="movie-card-grid" style="padding: 0 4rem;">
     {% for movie in movies %}
     <div class="movie-card" data-movie-id="{{ movie.id }}">
         <a href="{% url 'movie_detail' movie.id %}" style="text-decoration: none; display: block;">
