@@ -17,7 +17,6 @@ class CustomUserCreationForm(UserCreationForm):
         
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Add custom styling to all fields
         for field_name in self.fields:
             self.fields[field_name].widget.attrs.update({'class': 'form-control'})
     
@@ -34,7 +33,6 @@ class CustomAuthenticationForm(AuthenticationForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Add custom styling to fields
         self.fields['username'].widget.attrs.update({
             'class': 'form-control',
             'placeholder': 'Username'
@@ -43,3 +41,42 @@ class CustomAuthenticationForm(AuthenticationForm):
             'class': 'form-control',
             'placeholder': 'Password'
         })
+
+
+class AvatarUploadForm(forms.Form):
+    """Form for uploading profile avatar"""
+    avatar = forms.ImageField(
+        required=True,
+        widget=forms.FileInput(attrs={
+            'accept': 'image/*',
+            'style': 'display: none;',
+            'id': 'avatar-input'
+        })
+    )
+
+
+class ProfileEditForm(forms.ModelForm):
+    """Form to edit user profile details"""
+    first_name = forms.CharField(
+        max_length=30, required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'First Name'})
+    )
+    last_name = forms.CharField(
+        max_length=30, required=False,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Last Name'})
+    )
+    email = forms.EmailField(
+        required=True,
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email'})
+    )
+
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name', 'email')
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        user = self.instance
+        if User.objects.filter(email=email).exclude(pk=user.pk).exists():
+            raise forms.ValidationError('This email is already in use.')
+        return email

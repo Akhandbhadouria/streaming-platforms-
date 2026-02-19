@@ -222,7 +222,7 @@
                         class="fas fa-chevron-down"></i></span>
             </div>
 
-            {% for movie in trending_movies|slice:"1:4" %}
+            {% for movie in new_trailers %}
             <a href="{% url 'movie_detail' movie.id %}" class="side-item">
                 {% if movie.poster_path %}
                 <img src="https://image.tmdb.org/t/p/w200{{ movie.poster_path }}" class="side-thumb"
@@ -242,6 +242,8 @@
                     <i class="fas fa-play"></i>
                 </div>
             </a>
+            {% empty %}
+            <p style="color: var(--text-muted); padding: 1rem;">No new trailers available.</p>
             {% endfor %}
         </div>
 
@@ -285,7 +287,7 @@
                         Trending</span>
                 </div>
                 <h1 class="hero-title">{{ trending_movies.0.title }}</h1>
-                <p class="hero-description">{{ trending_movies.0.overview }}</p>
+                <!-- <p class="hero-description">{{ trending_movies.0.overview }}</p> -->
 
                 <div class="hero-actions">
                     <a href="{% url 'movie_detail' trending_movies.0.id %}" class="btn btn-primary">
@@ -364,21 +366,6 @@
 {% block extra_js %}
 <script>
     // Get CSRF token from cookie
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
-
     const csrftoken = getCookie('csrftoken');
 
     // Add hover effects for movie cards

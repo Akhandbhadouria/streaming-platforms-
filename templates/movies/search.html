@@ -570,11 +570,11 @@
     </div>
 
     <!-- Movies Grid -->
-    <div class="search-results-grid">
+    <div class="movie-card-grid">
         {% for movie in movies %}
-        <div class="search-movie-card" data-movie-id="{{ movie.id }}">
+        <div class="movie-card" data-movie-id="{{ movie.id }}">
             <a href="{% url 'movie_detail' movie.id %}" style="text-decoration: none; display: block;">
-                <div class="search-movie-image">
+                <div class="movie-card-image">
                     {% if movie.poster_path %}
                     <img src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}" alt="{{ movie.title }}"
                         loading="lazy">
@@ -591,17 +591,17 @@
                     {% endif %}
 
                     <!-- Rating Badge -->
-                    <div class="search-movie-rating">
+                    <div class="movie-card-rating">
                         <i class="fas fa-star"></i>
                         <span>{{ movie.vote_average|floatformat:1 }}</span>
                     </div>
 
                     <!-- Hover Overlay -->
-                    <div class="search-movie-overlay">
-                        <div class="search-movie-info">
+                    <div class="movie-card-overlay">
+                        <div class="movie-card-info">
                             <h3>{{ movie.title }}</h3>
                             {% if movie.release_date %}
-                            <p class="search-movie-year">{{ movie.release_date|date:"Y" }}</p>
+                            <p class="movie-card-year">{{ movie.release_date|date:"Y" }}</p>
                             {% endif %}
                         </div>
                     </div>
@@ -610,8 +610,8 @@
 
             <!-- Quick Add to Watchlist -->
             {% if user.is_authenticated %}
-            <div class="search-movie-actions">
-                <button class="btn-quick-add" onclick="addToWatchlist(event, {{ movie.id }})" title="Add to Watchlist">
+            <div class="movie-card-actions">
+                <button class="btn-icon-round" onclick="addToWatchlist(event, {{ movie.id }})" title="Add to Watchlist">
                     <i class="fas fa-plus"></i>
                 </button>
             </div>

@@ -44,6 +44,14 @@ def home(request):
     popular = popular_data.get('results', []) if popular_data else []
     top_rated = top_rated_data.get('results', []) if top_rated_data else []
 
+    # Get upcoming movies for "New Trailer" section
+    try:
+        upcoming_data = tmdb_service.get_upcoming_movies()
+        upcoming = upcoming_data.get('results', []) if upcoming_data else []
+    except Exception as e:
+        logger.error(f"Error fetching upcoming movies: {e}")
+        upcoming = []
+
     # Top 5 Viewed Movies Today
     today = timezone.now().date()
     top_today = Movie.objects.filter(
@@ -57,6 +65,7 @@ def home(request):
         'trending_movies': _filter_hidden_movies(request, trending)[:20],
         'popular_movies': _filter_hidden_movies(request, popular)[:20],
         'top_rated_movies': _filter_hidden_movies(request, top_rated)[:20],
+        'new_trailers': _filter_hidden_movies(request, upcoming)[:5],
         'top_today': top_today,
         'hidden_movies_ids': list(Movie.objects.filter(is_hidden=True).values_list('tmdb_id', flat=True)) if request.user.is_staff else []
     }
@@ -68,8 +77,21 @@ def browse_movies(request):
     """Browse all movies with filters"""
     page = request.GET.get('page', 1)
     category = request.GET.get('category', 'popular')
+    genre_id = request.GET.get('genre')
+
+    # Fetch available genres for the UI
+    try:
+        genres_data = tmdb_service.get_genres()
+        genres = genres_data.get('genres', []) if genres_data else []
+    except Exception as e:
+        logger.error(f"Error fetching genres: {e}")
+        genres = []
     
-    if category == 'trending':
+    # Determine which API to call based on filters
+    if genre_id:
+        # If genre is selected, use discover endpoint
+        data = tmdb_service.discover_movies(with_genres=genre_id, page=page)
+    elif category == 'trending':
         data = tmdb_service.get_trending_movies(page=page)
     elif category == 'top_rated':
         data = tmdb_service.get_top_rated_movies(page=page)
@@ -78,6 +100,7 @@ def browse_movies(request):
     elif category == 'now_playing':
         data = tmdb_service.get_now_playing_movies(page=page)
     else:
+        # Default to popular
         data = tmdb_service.get_popular_movies(page=page)
     
     movies = data.get('results', []) if data else []
@@ -87,8 +110,11 @@ def browse_movies(request):
     context = {
         'movies': filtered_movies,
         'category': category,
+        'selected_genre': int(genre_id) if genre_id else None,
+        'genres': genres,
         'current_page': int(page),
         'total_pages': min(total_pages, 500),  # TMDB limits to 500 pages
+        'page_range': _get_page_range(int(page), min(total_pages, 500)),
         'hidden_movies_ids': list(Movie.objects.filter(is_hidden=True).values_list('tmdb_id', flat=True)) if request.user.is_staff else []
     }
     
@@ -198,11 +224,44 @@ def search_movies(request):
         'query': query,
         'current_page': int(page),
         'total_pages': min(total_pages, 500),
-        'total_results': total_results,
+        'total_results': data.get('total_results', len(filtered_movies)) if query else 0,
+        'page_range': _get_page_range(int(page), min(total_pages, 500)),
         'hidden_movies_ids': list(Movie.objects.filter(is_hidden=True).values_list('tmdb_id', flat=True)) if request.user.is_staff else []
     }
     
     return render(request, 'movies/search.html', context)
+
+
+def _get_page_range(current, total):
+    """Calculate a smart page range for pagination"""
+    if total <= 1:
+        return []
+        
+    pages = []
+    # Always include first page
+    pages.append(1)
+
+    # Calculate range around current page
+    start = max(2, current - 2)
+    end = min(total - 1, current + 2)
+
+    # Add ellipsis if gap after first page
+    if start > 2:
+        pages.append('...')
+
+    # Add pages around current
+    for p in range(start, end + 1):
+        pages.append(p)
+
+    # Add ellipsis if gap before last page
+    if end < total - 1:
+        pages.append('...')
+
+    # Always include last page if > 1
+    if total > 1:
+        pages.append(total)
+        
+    return pages
 
 
 @login_required
@@ -325,6 +384,57 @@ def toggle_hide_movie(request, movie_id):
     
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
+
+@login_required
+def profile(request):
+    """User profile page with edit capabilities"""
+    from accounts.models import UserProfile
+    from accounts.forms import AvatarUploadForm, ProfileEditForm
+    from django.contrib.auth.forms import PasswordChangeForm
+    from django.contrib.auth import update_session_auth_hash
+    from django.contrib import messages
+
+    # Ensure profile exists
+    user_profile, created = UserProfile.objects.get_or_create(user=request.user)
+    profile_form = ProfileEditForm(instance=request.user)
+    password_form = PasswordChangeForm(request.user)
+
+    if request.method == 'POST':
+        form_type = request.POST.get('form_type', '')
+
+        if form_type == 'avatar' and request.FILES.get('avatar'):
+            if user_profile.avatar:
+                user_profile.avatar.delete(save=False)
+            user_profile.avatar = request.FILES['avatar']
+            user_profile.save()
+            messages.success(request, 'Profile picture updated!')
+            return redirect('profile')
+
+        elif form_type == 'profile':
+            profile_form = ProfileEditForm(request.POST, instance=request.user)
+            if profile_form.is_valid():
+                profile_form.save()
+                messages.success(request, 'Profile updated successfully!')
+                return redirect('profile')
+
+        elif form_type == 'password':
+            password_form = PasswordChangeForm(request.user, request.POST)
+            if password_form.is_valid():
+                user = password_form.save()
+                update_session_auth_hash(request, user)
+                messages.success(request, 'Password changed successfully!')
+                return redirect('profile')
+
+    watchlist_count = Watchlist.objects.filter(user=request.user).count()
+
+    context = {
+        'watchlist_count': watchlist_count,
+        'user_profile': user_profile,
+        'profile_form': profile_form,
+        'password_form': password_form,
+    }
+
+    return redirect('profile') if request.method == 'POST' and 'form_type' not in request.POST else render(request, 'accounts/profile.html', context)
 
 @staff_member_required
 def supervisor_dashboard(request):

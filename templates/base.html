@@ -33,9 +33,9 @@
         <ul class="navbar-nav">
             <li><a href="{% url 'home' %}" class="nav-link {% if request.path == '/' %}active{% endif %}">Movies</a>
             </li>
-            <li><a href="{% url 'browse' %}?category=tv" class="nav-link">TV Series</a></li>
-            <li><a href="{% url 'browse' %}?category=animation" class="nav-link">Animation</a></li>
-            <li><a href="{% url 'browse' %}?category=mistery" class="nav-link">Mistery</a></li>
+            <li><a href="{% url 'browse' %}?category=trending" class="nav-link">Trending</a></li>
+            <li><a href="{% url 'browse' %}?category=top_rated" class="nav-link">Top Rated</a></li>
+            <li><a href="{% url 'browse' %}?category=upcoming" class="nav-link">Upcoming</a></li>
         </ul>
 
         <div style="display: flex; align-items: center; gap: 1rem;">
@@ -58,7 +58,10 @@
                         style="width: 35px; height: 35px; border-radius: 50%; background: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.8rem;">
                         {{ user.username|first|upper }}
                     </div>
-                    <span style="font-size: 0.85rem; font-weight: 600;">{{ user.username }}</span>
+                    <a href="{% url 'profile' %}"
+                        style="font-size: 0.85rem; font-weight: 600; color: white; text-decoration: none;">
+                        {{ user.username }}
+                    </a>
 
                     <form action="{% url 'logout' %}" method="post" style="display: inline; margin-left: 5px;">
                         {% csrf_token %}
@@ -78,16 +81,62 @@
     </nav>
 
     <!-- Main Content -->
-    <main style="padding-top: 80px;">
+    <main style="padding-top: 20px;">
         {% if messages %}
-        <div class="container">
+        <div id="toast-container"
+            style="position: fixed; top: 80px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem;">
             {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}"
-                style="padding: 1rem; margin: 1rem 0; border-radius: 8px; background: {% if message.tags == 'success' %}var(--success){% elif message.tags == 'error' %}var(--danger){% else %}var(--primary){% endif %}; opacity: 0.9;">
-                {{ message }}
+            <div class="toast-msg"
+                style="
+                padding: 1rem 1.5rem;
+                border-radius: 10px;
+                color: #fff;
+                font-size: 0.9rem;
+                font-weight: 500;
+                min-width: 280px;
+                max-width: 400px;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+                display: flex;
+                align-items: center;
+                gap: 0.8rem;
+                animation: slideIn 0.3s ease;
+                {% if message.tags == 'success' %}background: linear-gradient(135deg, #1a8b4c, #15803d); border-left: 4px solid #22c55e;
+                {% elif message.tags == 'error' %}background: linear-gradient(135deg, #b91c1c, #991b1b); border-left: 4px solid #ef4444;
+                {% else %}background: linear-gradient(135deg, #1d4ed8, #1e40af); border-left: 4px solid #3b82f6;{% endif %}">
+                <i class="fas {% if message.tags == 'success' %}fa-check-circle{% elif message.tags == 'error' %}fa-exclamation-circle{% else %}fa-info-circle{% endif %}"
+                    style="font-size: 1.2rem;"></i>
+                <span>{{ message }}</span>
+                <button onclick="this.parentElement.remove()"
+                    style="background: none; border: none; color: rgba(255,255,255,0.7); cursor: pointer; margin-left: auto; font-size: 1rem;">&times;</button>
             </div>
             {% endfor %}
         </div>
+        <style>
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+        </style>
+        <script>
+            setTimeout(function () {
+                var toasts = document.querySelectorAll('.toast-msg');
+                toasts.forEach(function (toast, i) {
+                    setTimeout(function () {
+                        toast.style.transition = 'opacity 0.4s, transform 0.4s';
+                        toast.style.opacity = '0';
+                        toast.style.transform = 'translateX(100%)';
+                        setTimeout(function () { toast.remove(); }, 400);
+                    }, i * 200);
+                });
+            }, 4000);
+        </script>
         {% endif %}
 
         {% block content %}{% endblock %}
@@ -132,7 +181,7 @@
             </div>
             <div
                 style="text-align: center; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); font-size: 0.9rem;">
-                <p>&copy; 2026 Aura. All rights reserved. Powered by TMDB API.</p>
+                <p>&copy; {% now "Y" %} Aura. All rights reserved. Powered by TMDB API.</p>
             </div>
         </div>
     </footer>
@@ -165,6 +214,45 @@
             return cookieValue;
         }
         const csrftoken = getCookie('csrftoken') || '{{ csrf_token }}';
+
+        // Global notification function
+        function showNotification(message, type = 'success') {
+            const existing = document.querySelector('.notification');
+            if (existing) existing.remove();
+
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+            ${message}
+        `;
+
+            // Ensure styles exist
+            if (!document.getElementById('notification-styles')) {
+                const style = document.createElement('style');
+                style.id = 'notification-styles';
+                style.textContent = `
+                .notification {
+                    position: fixed; top: 20px; right: 20px; color: white;
+                    padding: 1rem 1.5rem; border-radius: 50px;
+                    box-shadow: 0 5px 20px rgba(0,0,0,0.3); z-index: 9999;
+                    font-weight: 500; display: flex; align-items: center; gap: 0.8rem;
+                    animation: slideIn 0.3s ease; border: 1px solid rgba(255,255,255,0.1);
+                }
+                .notification-success { background: #28a745; }
+                .notification-error { background: #dc3545; }
+                @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+                @keyframes slideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+            `;
+                document.head.appendChild(style);
+            }
+
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease forwards';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
     </script>
 
     {% block extra_js %}{% endblock %}

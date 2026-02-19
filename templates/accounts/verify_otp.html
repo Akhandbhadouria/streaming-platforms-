@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Verify Email - Aura{% endblock %}
+
+{% block content %}
+<div class="container pt-6" style="min-height: 80vh; display: flex; align-items: center; justify-content: center;">
+    <div
+        style="width: 100%; max-width: 450px; padding: 2.5rem; background: rgba(0,0,0,0.75); border-radius: 12px; border: 1px solid #333; text-align: center;">
+
+        <div
+            style="width: 80px; height: 80px; background: rgba(229,9,20,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem;">
+            <i class="fas fa-envelope" style="font-size: 2rem; color: #e50914;"></i>
+        </div>
+
+        <h1 style="font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem;">Verify Your Email</h1>
+        <p style="color: #bbb; margin-bottom: 2rem; font-size: 0.95rem;">
+            We've sent a 6-digit code to<br>
+            <strong style="color: #fff;">{{ email }}</strong>
+        </p>
+
+        {% if messages %}
+        {% for message in messages %}
+        <div
+            style="padding: 0.8rem; margin-bottom: 1rem; border-radius: 8px; font-size: 0.9rem;
+            {% if message.tags == 'error' %}background: rgba(229,9,20,0.15); color: #ff4444; border: 1px solid rgba(229,9,20,0.3);
+            {% else %}background: rgba(46,204,113,0.15); color: #2ecc71; border: 1px solid rgba(46,204,113,0.3);{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <form method="post" action="{% url 'verify_otp' %}">
+            {% csrf_token %}
+            <div style="display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1.5rem;">
+                <input type="text" name="otp" maxlength="6"
+                    style="width: 200px; text-align: center; font-size: 1.8rem; letter-spacing: 0.8rem; font-weight: 700; padding: 0.8rem; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2); border-radius: 12px; color: white; outline: none;"
+                    placeholder="------" autofocus oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.8rem; font-size: 1rem;">
+                <i class="fas fa-check-circle"></i> Verify Email
+            </button>
+        </form>
+
+        <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid #333;">
+            <p style="color: #888; font-size: 0.85rem; margin-bottom: 0.8rem;">Didn't receive the code?</p>
+            <a href="{% url 'resend_otp' %}"
+                style="color: #e50914; text-decoration: none; font-weight: 600; font-size: 0.9rem;">
+                <i class="fas fa-redo"></i> Resend Code
+            </a>
+        </div>
+
+        <p style="color: #555; font-size: 0.8rem; margin-top: 1.5rem;">
+            Code expires in 10 minutes
+        </p>
+    </div>
+</div>
+{% endblock %}
