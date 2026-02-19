@@ -44,10 +44,20 @@ def home(request):
     popular = popular_data.get('results', []) if popular_data else []
     top_rated = top_rated_data.get('results', []) if top_rated_data else []
 
+    # Top 5 Viewed Movies Today
+    today = timezone.now().date()
+    top_today = Movie.objects.filter(
+        views__viewed_at__date=today,
+        is_hidden=False
+    ).annotate(
+        today_views=Count('views')
+    ).order_by('-today_views')[:5]
+
     context = {
         'trending_movies': _filter_hidden_movies(request, trending)[:20],
         'popular_movies': _filter_hidden_movies(request, popular)[:20],
         'top_rated_movies': _filter_hidden_movies(request, top_rated)[:20],
+        'top_today': top_today,
         'hidden_movies_ids': list(Movie.objects.filter(is_hidden=True).values_list('tmdb_id', flat=True)) if request.user.is_staff else []
     }
     
@@ -177,15 +187,18 @@ def search_movies(request):
         movies = data.get('results', []) if data else []
         filtered_movies = _filter_hidden_movies(request, movies)
         total_pages = data.get('total_pages', 1) if data else 1
+        total_results = data.get('total_results', 0) if data else 0
     else:
         filtered_movies = []
         total_pages = 1
+        total_results = 0
     
     context = {
         'movies': filtered_movies,
         'query': query,
         'current_page': int(page),
         'total_pages': min(total_pages, 500),
+        'total_results': total_results,
         'hidden_movies_ids': list(Movie.objects.filter(is_hidden=True).values_list('tmdb_id', flat=True)) if request.user.is_staff else []
     }
     
@@ -316,17 +329,15 @@ def toggle_hide_movie(request, movie_id):
 @staff_member_required
 def supervisor_dashboard(request):
     """Supervisor Portal / Dashboard"""
-    all_movies = Movie.objects.all().order_by('-updated_at')
+    all_movies = Movie.objects.filter(is_hidden=True).order_by('-updated_at')
     
     # Add pagination
     paginator = Paginator(all_movies, 20)  # Show 20 movies per page
     page_number = request.GET.get('page', 1)
     movies = paginator.get_page(page_number)
-    
     hidden_count = Movie.objects.filter(is_hidden=True).count()
-    
-    # Analytics Data
     total_views = MovieView.objects.count()
+    views_today = MovieView.objects.filter(viewed_at__date=timezone.now().date()).count()
     
     # Top 10 Viewed Movies
     top_movies = Movie.objects.annotate(
@@ -366,6 +377,7 @@ def supervisor_dashboard(request):
         'movies': movies,
         'hidden_count': hidden_count,
         'total_views': total_views,
+        'views_today': views_today,
         'top_movies': top_movies,
         'recent_traffic': recent_traffic,
         'chart_labels': chart_labels,

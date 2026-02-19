@@ -129,8 +129,8 @@
     <!-- Stats Section -->
     <div class="stats-grid">
         <div class="stat-card">
-            <div class="stat-value">{{ movies.count }}</div>
-            <div class="stat-label">Total in DB</div>
+            <div class="stat-value">{{ views_today }}</div>
+            <div class="stat-label">Views Today</div>
         </div>
         <div class="stat-card">
             <div class="stat-value" id="hidden-count-stat">{{ hidden_count }}</div>
@@ -166,7 +166,8 @@
                 <div
                     style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.05);">
                     <div style="display: flex; align-items: center; gap: 1rem;">
-                        <span style="color: var(--text-muted); font-weight: 800; width: 20px;">#{{forloop.counter}}</span>
+                        <span
+                            style="color: var(--text-muted); font-weight: 800; width: 20px;">#{{forloop.counter}}</span>
                         <img src="{{ movie.poster_url }}"
                             style="width: 30px; height: 45px; border-radius: 4px; object-fit: cover;">
                         <span style="font-weight: 600;">{{ movie.title }}</span>
@@ -216,7 +217,12 @@
     </div>
 
     <!-- Movies Management -->
-    <h2 style="margin-bottom: 1.5rem;">Library Management</h2>
+    <h2 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+        <i class="fas fa-eye-slash" style="color: var(--primary);"></i> Restricted Content Management
+    </h2>
+    <p style="color: var(--text-secondary); margin-bottom: 2rem;">Movies listed here are currently hidden from the
+        public. You can hide more movies directly from their individual detail pages.</p>
+
     <table class="movie-table">
         <thead>
             <tr>
@@ -263,8 +269,12 @@
             {% empty %}
             <tr>
                 <td colspan="5" class="text-center" style="padding: 4rem;">
-                    No movies found in the database. Movies appear here after they've been visited or added to
-                    watchlists.
+                    <div style="color: var(--text-muted); font-size: 1.2rem; margin-bottom: 1rem;">
+                        <i class="fas fa-check-circle"
+                            style="font-size: 3rem; color: #28a745; margin-bottom: 1rem; display: block;"></i>
+                        No hidden movies found.
+                    </div>
+                    <p style="color: var(--text-secondary);">Your library is currently fully visible to all users.</p>
                 </td>
             </tr>
             {% endfor %}
