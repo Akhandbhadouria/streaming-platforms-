@@ -251,24 +251,7 @@
 
             {% for movie in top_today %}
             <a href="{% url 'movie_detail' movie.tmdb_id %}" class="side-item">
-                <div style="position: relative;">
-<<<<<<< HEAD
-                    {% if movie.backdrop_path %}
-                    <img src="https://image.tmdb.org/t/p/w200{{ movie.backdrop_path }}" class="side-thumb"
-                        style="width: 80px; height: 50px; border-radius: 8px;">
-                    {% else %}
-                    <div class="side-thumb"
-                        style="width:80px;height:50px;border-radius:8px;background:#2a2a2a;display:flex;align-items:center;justify-content:center;font-size:0.6rem;color:#999;">
-                        No Image</div>
-                    {% endif %}
-                    <div
-                        style="position: absolute; bottom: 0; left: 0; height: 3px; background: var(--primary); border-radius: 3px; width: {% if forloop.first %}80%{% elif forloop.counter == 2 %}40%{% else %}10%{% endif %};">
-                    </div>
-                </div>
-                <div style="flex: 1;">
-                    <h4 style="font-size: 0.85rem; margin-bottom: 0.2rem;">{{ movie.title }}</h4>
-                    <span style="font-size: 0.75rem; color: var(--text-muted);">{{ movie.release_date|date:"Y" }}</span>
-=======
+                <div>
                     {% if movie.poster_path %}
                     <img src="{{ movie.poster_url }}" class="side-thumb"
                         style="width: 50px; height: 75px; border-radius: 8px; object-fit: cover;">
@@ -281,7 +264,6 @@
                     <h4 style="font-size: 0.85rem; margin-bottom: 0.2rem;">{{ movie.title }}</h4>
                     <span style="font-size: 0.75rem; color: var(--text-muted);">{{ movie.today_views }} views
                         today</span>
->>>>>>> ed6e085230458ada5b49dcb352b8e4a8c1fa9dd0
                 </div>
             </a>
             {% empty %}
