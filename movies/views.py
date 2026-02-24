@@ -3,9 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.db.models import Q, Count
-from .models import Movie, Watchlist, Rating, MovieView
+from .models import Movie, Watchlist, MovieView
 from .services import TMDBService, YouTubeService
-from .forms import RatingForm
 import logging
 
 from django.contrib.admin.views.decorators import staff_member_required
@@ -170,13 +169,8 @@ def movie_detail(request, movie_id):
 
     # Check if movie is in user's watchlist
     in_watchlist = False
-    user_rating = None
     if request.user.is_authenticated:
         in_watchlist = Watchlist.objects.filter(user=request.user, movie=movie).exists()
-        try:
-            user_rating = Rating.objects.get(user=request.user, movie=movie)
-        except Rating.DoesNotExist:
-            pass
             
     # Track view for analytics
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -195,7 +189,6 @@ def movie_detail(request, movie_id):
         'movie': movie,
         'movie_data': movie_data,
         'in_watchlist': in_watchlist,
-        'user_rating': user_rating,
         'cast': movie_data.get('credits', {}).get('cast', [])[:10],
         'similar_movies': movie_data.get('similar', {}).get('results', [])[:6],
     }
@@ -319,43 +312,7 @@ def remove_from_watchlist(request, movie_id):
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
 
-@login_required
-def rate_movie(request, movie_id):
-    """Rate a movie"""
-    if request.method == 'POST':
-        try:
-            movie = Movie.objects.get(tmdb_id=movie_id)
-            
-            # Try to get existing rating
-            try:
-                rating_obj = Rating.objects.get(user=request.user, movie=movie)
-                form = RatingForm(request.POST, instance=rating_obj)
-            except Rating.DoesNotExist:
-                form = RatingForm(request.POST)
-            
-            if form.is_valid():
-                rating_obj = form.save(commit=False)
-                rating_obj.user = request.user
-                rating_obj.movie = movie
-                rating_obj.save()
-                
-                return JsonResponse({
-                    'status': 'success',
-                    'message': 'Rating saved',
-                    'rating': rating_obj.rating
-                })
-            else:
-                # Return form errors
-                return JsonResponse({
-                    'status': 'error',
-                    'message': 'Invalid rating',
-                    'errors': form.errors
-                }, status=400)
-                
-        except Movie.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Movie not found'}, status=404)
-    
-    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
 
 
 @staff_member_required
