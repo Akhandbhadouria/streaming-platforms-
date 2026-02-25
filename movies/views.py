@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.core.paginator import Paginator
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Max
 from .models import Movie, Watchlist, MovieView
 from .services import TMDBService, YouTubeService
 import logging
@@ -411,8 +411,29 @@ def supervisor_dashboard(request):
         view_count=Count('views')
     ).order_by('-view_count')[:10]
     
-    # Recent Traffic (last 10 views)
-    recent_traffic = MovieView.objects.select_related('movie', 'user').all()[:10]
+    # Live Active Today — each movie shown once, with its total view count for today
+    today_start = timezone.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    live_today = (
+        MovieView.objects.filter(viewed_at__gte=today_start)
+        .values('movie_id')
+        .annotate(
+            views_count=Count('id'),
+            last_viewed=Max('viewed_at')
+        )
+        .order_by('-last_viewed')[:20]
+    )
+    # Attach actual Movie objects
+    movie_ids = [item['movie_id'] for item in live_today]
+    movies_map = {m.id: m for m in Movie.objects.filter(id__in=movie_ids)}
+    live_today_feed = [
+        {
+            'movie': movies_map[item['movie_id']],
+            'views_count': item['views_count'],
+            'last_viewed': item['last_viewed'],
+        }
+        for item in live_today
+        if item['movie_id'] in movies_map
+    ]
 
     # Daily views for the last 7 days
     seven_days_ago = timezone.now().date() - timedelta(days=6)
@@ -446,7 +467,7 @@ def supervisor_dashboard(request):
         'total_views': total_views,
         'views_today': views_today,
         'top_movies': top_movies,
-        'recent_traffic': recent_traffic,
+        'live_today_feed': live_today_feed,
         'chart_labels': chart_labels,
         'chart_data': chart_data,
     }

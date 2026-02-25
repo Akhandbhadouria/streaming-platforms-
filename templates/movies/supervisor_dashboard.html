@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load movie_tags %}
 
 {% block title %}Supervisor Dashboard - Aura{% endblock %}
 
@@ -110,6 +111,11 @@
         object-fit: cover;
         background: #333;
     }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.3; }
+    }
 </style>
 {% endblock %}
 
@@ -187,30 +193,22 @@
         <div
             style="background: var(--dark-lighter); padding: 2rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
             <h2 style="margin-bottom: 1.5rem; font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem;">
-                <i class="fas fa-user-clock" style="color: #28a745;"></i> Live Activity Feed
+                <i class="fas fa-circle" style="color: #28a745; font-size: 0.6rem; animation: pulse 1.5s infinite;"></i>
+                Live Active Today
             </h2>
-            <div style="display: flex; flex-direction: column; gap: 1.2rem;">
-                {% for view in recent_traffic %}
-                <div style="display: flex; justify-content: space-between; align-items: start; font-size: 0.9rem;">
-                    <div style="display: flex; gap: 1rem;">
-                        <div
-                            style="width: 8px; height: 8px; border-radius: 50%; background: #28a745; margin-top: 6px; box-shadow: 0 0 8px #28a745;">
-                        </div>
-                        <div>
-                            <span style="color: #fff; font-weight: 600;">{{ view.movie.title }}</span>
-                            <br>
-                            <small style="color: var(--text-muted);">
-                                {% if view.user %}{{ view.user.username }}{% else %}Guest User{% endif %}
-                                • <span style="font-family: monospace;">{{ view.ip_address|default:"127.0.0.1" }}</span>
-                            </small>
-                        </div>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                {% for item in live_today_feed %}
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; padding: 0.6rem 0; border-bottom: 1px solid rgba(255,255,255,0.04);">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="width: 8px; height: 8px; border-radius: 50%; background: #28a745; flex-shrink: 0; box-shadow: 0 0 8px #28a745;"></div>
+                        <span style="color: #fff; font-weight: 600;">{{ item.movie.title }}</span>
                     </div>
-                    <span style="color: var(--text-muted); font-size: 0.8rem; white-space: nowrap;">
-                        {{ view.viewed_at|timesince }} ago
+                    <span style="background: rgba(229,9,20,0.15); color: #e50914; border: 1px solid rgba(229,9,20,0.35); border-radius: 20px; padding: 2px 10px; font-size: 0.78rem; font-weight: 700; white-space: nowrap;">
+                        {{ item.views_count }} {% if item.views_count == 1 %}view{% else %}views{% endif %}
                     </span>
                 </div>
                 {% empty %}
-                <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No activity recorded.</p>
+                <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No activity today yet.</p>
                 {% endfor %}
             </div>
         </div>
