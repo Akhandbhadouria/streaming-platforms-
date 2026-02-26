@@ -2,11 +2,10 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout, update_session_auth_hash
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import PasswordChangeForm
 from django.core.mail import send_mail
 from django.conf import settings
 from .forms import CustomUserCreationForm, CustomAuthenticationForm, AvatarUploadForm, ProfileEditForm
-from .models import UserProfile, EmailOTP
+from .models import  EmailOTP
 
 
 def register(request):
@@ -121,7 +120,6 @@ def resend_otp(request):
 
 
 def user_login(request):
-    """User login"""
     if request.user.is_authenticated:
         return redirect('home')
     
@@ -133,6 +131,9 @@ def user_login(request):
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
+                if user.is_staff:
+                    messages.success(request, f'Supervisor {username} logged in successfully!')
+                    return redirect('supervisor_dashboard')
                 messages.success(request, f'Welcome back, {username}!')
                 next_url = request.GET.get('next', 'home')
                 return redirect(next_url)
@@ -144,34 +145,6 @@ def user_login(request):
         form = CustomAuthenticationForm()
     
     return render(request, 'accounts/login.html', {'form': form})
-
-
-def supervisor_login(request):
-    """Supervisor login"""
-    if request.user.is_authenticated and request.user.is_staff:
-        return redirect('supervisor_dashboard')
-    
-    if request.method == 'POST':
-        form = CustomAuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                if user.is_staff:
-                    login(request, user)
-                    messages.success(request, f'Supervisor {username} logged in successfully!')
-                    return redirect('supervisor_dashboard')
-                else:
-                    messages.error(request, 'Access denied. Only supervisors can access this portal.')
-            else:
-                messages.error(request, 'Invalid username or password.')
-        else:
-            messages.error(request, 'Invalid username or password.')
-    else:
-        form = CustomAuthenticationForm()
-    
-    return render(request, 'accounts/supervisor_login.html', {'form': form})
 
 
 @login_required

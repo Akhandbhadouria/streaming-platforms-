@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.core.paginator import Paginator
@@ -395,7 +395,6 @@ def profile(request):
 
 @staff_member_required
 def supervisor_dashboard(request):
-    """Supervisor Portal / Dashboard"""
     all_movies = Movie.objects.filter(is_hidden=True).order_by('-updated_at')
     
     # Add pagination
@@ -445,12 +444,10 @@ def supervisor_dashboard(request):
     chart_labels = []
     chart_data = []
     
-    # Store stats in a dict with string keys for reliable lookup
     stats_dict = {}
     for s in daily_stats:
         date_key = s['viewed_at__date']
         if date_key:
-            # Ensure the key is a string in YYYY-MM-DD format
             if not isinstance(date_key, str):
                 date_key = date_key.strftime('%Y-%m-%d')
             stats_dict[date_key] = s['count']
@@ -458,7 +455,6 @@ def supervisor_dashboard(request):
     for i in range(7):
         date = seven_days_ago + timedelta(days=i)
         chart_labels.append(date.strftime('%b %d'))
-        # Lookup using the same string format
         chart_data.append(stats_dict.get(date.strftime('%Y-%m-%d'), 0))
 
     context = {

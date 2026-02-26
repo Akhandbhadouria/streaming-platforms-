@@ -6,6 +6,5 @@ urlpatterns = [
     path('verify-otp/', views.verify_otp, name='verify_otp'),
     path('resend-otp/', views.resend_otp, name='resend_otp'),
     path('login/', views.user_login, name='login'),
-    path('supervisor-login/', views.supervisor_login, name='supervisor_login'),
     path('logout/', views.user_logout, name='logout'),
 ]
